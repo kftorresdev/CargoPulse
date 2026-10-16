@@ -4,6 +4,10 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PrismaModule } from './database/prisma.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { ShipmentsModule } from './modules/shipments/shipments.module.js';
+import { CollaborationModule } from './modules/collaboration/collaboration.module.js';
+import { FreightAuditModule } from './modules/freight-audit/freight-audit.module.js';
+import { AlertCenterModule } from './modules/alert-center/alert-center.module.js';
 
 @Module({
   imports: [
@@ -12,6 +16,10 @@ import { AuthModule } from './modules/auth/auth.module.js';
     }),
     PrismaModule,
     AuthModule,
+    ShipmentsModule,
+    CollaborationModule,
+    FreightAuditModule,
+    AlertCenterModule,
   ],
   controllers: [AppController],
   providers: [AppService],

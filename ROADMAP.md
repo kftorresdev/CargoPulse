@@ -1,7 +1,7 @@
 # CARGOPULSE — Granular 8-Sprint Roadmap & Execution Matrix
 
 > **Project:** CargoPulse (Enterprise Logistics Operations & 5-Leg Freight Audit Platform)  
-> **Status:** Sprint 1 Completed / Ready for Sprint 2  
+> **Status:** Sprint 2 Completed / Ready for Sprint 3  
 > **Tracking File:** Updated continuously at each milestone  
 
 ---
@@ -35,10 +35,10 @@
 ---
 
 ## Sprint 2: Lógica de Negocio Backend (Shipments, Auditoría & Alertas)
-- [ ] **2.1** `ShipmentsModule`: CRUD de envíos, filtrado multicriterio, actualización de estados de ciclo de vida.
-- [ ] **2.2** `FreightAuditModule`: Motor de cálculo de desviaciones en 5 tramos (`costoReal - costoCotizado`), reglas de varianza y exportación a Excel server-side con `ExcelJS`.
-- [ ] **2.3** `AlertCenterModule`: Centro de alertas, cálculo dinámico de SLAs en vivo (`DD:HH:MM`) y sumatoria de impacto financiero en USD.
-- [ ] **2.4** `CollaborationModule`: Hilos jerárquicos de 3 niveles con adjuntos documentales.
+- [x] **2.1** `ShipmentsModule`: CRUD de envíos, filtrado multicriterio, generación de código `CP-XXXXXX`, cálculo de 5 tramos por defecto, actualización de estados de ciclo de vida.
+- [x] **2.2** `FreightAuditModule`: Motor de cálculo de desviaciones en 5 tramos (`costoReal - costoCotizado`), reglas de varianza y exportación a Excel server-side con `ExcelJS` estilizado.
+- [x] **2.3** `AlertCenterModule`: Centro de alertas, cálculo dinámico de SLAs en vivo (`DD:HH:MM`) y sumatoria de impacto financiero en USD con resolución justificada.
+- [x] **2.4** `CollaborationModule`: Hilos jerárquicos de 3 niveles (*Nota Principal $\rightarrow$ Réplica $\rightarrow$ Subcomentario*) con validación de profundidad máxima y adjuntos.
 
 ---
 
