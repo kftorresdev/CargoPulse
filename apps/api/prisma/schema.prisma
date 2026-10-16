@@ -1,0 +1,129 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  LOGISTICS_OPERATOR
+  FREIGHT_AUDITOR
+}
+
+enum ShipmentStatus {
+  DRAFT
+  PLANNED
+  IN_TRANSIT_ORIGIN
+  CUSTOMS_HOLD
+  CUSTOMS_CLEARED
+  IN_TRANSIT_FINAL
+  DELIVERED
+  CANCELLED
+}
+
+enum StageType {
+  ORIGIN_HANDLING
+  TRANSIT_1
+  CUSTOMS_BORDER
+  TRANSIT_2
+  FINAL_DESTINATION
+}
+
+enum StageStatus {
+  PENDING
+  APPROVED
+  DISPUTED
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         Role     @default(LOGISTICS_OPERATOR)
+  isActive     Boolean  @default(true)
+  notes        Note[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Shipment {
+  id             String         @id @default(uuid())
+  trackingNumber String         @unique
+  origin         String
+  destination    String
+  currentStatus  ShipmentStatus @default(DRAFT)
+  carrierName    String
+  eta            DateTime
+  actualDelivery DateTime?
+  stages         FreightStage[]
+  alerts         Alert[]
+  notes          Note[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model FreightStage {
+  id              String      @id @default(uuid())
+  shipmentId      String
+  shipment        Shipment    @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  stageType       StageType
+  stageOrder      Int
+  contractedCost  Float
+  actualCost      Float
+  variance        Float
+  variancePercent Float
+  currency        String      @default("USD")
+  status          StageStatus @default(PENDING)
+  auditNotes      String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Alert {
+  id                 String        @id @default(uuid())
+  shipmentId         String
+  shipment           Shipment      @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  title              String
+  description        String
+  severity           AlertSeverity @default(MEDIUM)
+  status             AlertStatus   @default(OPEN)
+  slaDeadline        DateTime
+  financialImpactUsd Float         @default(0)
+  resolutionNotes    String?
+  resolvedAt         DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model Note {
+  id            String    @id @default(uuid())
+  shipmentId    String
+  shipment      Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  parentId      String?
+  parent        Note?     @relation("NoteReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Note[]    @relation("NoteReplies")
+  content       String
+  attachmentUrl String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}

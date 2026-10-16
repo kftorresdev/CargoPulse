@@ -1,7 +1,7 @@
 # CARGOPULSE — Granular 8-Sprint Roadmap & Execution Matrix
 
 > **Project:** CargoPulse (Enterprise Logistics Operations & 5-Leg Freight Audit Platform)  
-> **Status:** Sprint 0 In Progress  
+> **Status:** Sprint 1 Completed / Ready for Sprint 2  
 > **Tracking File:** Updated continuously at each milestone  
 
 ---
@@ -19,18 +19,18 @@
 ---
 
 ## Sprint 1: Backend Core, Base de Datos & Auth (NestJS)
-- [ ] **1.1** Configuración de variables de entorno con validación estricta (`@nestjs/config` + Joi / class-validator).
-- [ ] **1.2** Configuración de Prisma ORM conectado a PostgreSQL.
-- [ ] **1.3** Modelado completo en `schema.prisma`:
+- [x] **1.1** Configuración de variables de entorno con validación estricta (`@nestjs/config` + helpers en `env.config.ts`).
+- [x] **1.2** Configuración de Prisma ORM conectado a PostgreSQL con `PrismaService` y `PrismaModule`.
+- [x] **1.3** Modelado completo en `schema.prisma`:
   - `User` & `Role` (ADMIN, LOGISTICS_OPERATOR, FREIGHT_AUDITOR)
-  - `Shipment` & `ShipmentStatus`
-  - `FreightStage` (5 tramos: ORIGIN, TRANSIT_1, CUSTOMS_BORDER, TRANSIT_2, DESTINATION)
+  - `Shipment` & `ShipmentStatus` (8 estados de ciclo de vida)
+  - `FreightStage` (5 tramos: ORIGIN_HANDLING, TRANSIT_1, CUSTOMS_BORDER, TRANSIT_2, FINAL_DESTINATION)
   - `Alert` & `AlertSeverity` & `AlertStatus`
-  - `Note` (Estructura de bitácora en 3 niveles con `parentId`)
-- [ ] **1.4** Generar migración inicial e implementar script de semillas realistas (`seed.ts`).
-- [ ] **1.5** Implementar `AuthModule` (Registro, Login, hashing bcrypt, JWT, `JwtAuthGuard`, `RolesGuard`).
-- [ ] **1.6** Configurar Swagger/OpenAPI en `/api/docs` con esquemas tipados y autenticación Bearer.
-- [ ] **1.7** Configurar `TransformInterceptor` y `HttpExceptionFilter` global en NestJS.
+  - `Note` (Estructura de bitácora en 3 niveles con relación `parentId`)
+- [x] **1.4** Generar cliente Prisma (`@prisma/client`) e implementar script de semillas realistas (`seed.ts` con bcrypt).
+- [x] **1.5** Implementar `AuthModule` (Registro, Login, hashing bcrypt, JWT, `JwtAuthGuard`, `RolesGuard`, `@CurrentUser()`).
+- [x] **1.6** Configurar Swagger/OpenAPI en `/api/docs` con esquemas tipados y autenticación Bearer.
+- [x] **1.7** Configurar `TransformInterceptor` y `HttpExceptionFilter` global en NestJS.
 
 ---
 
