@@ -1,7 +1,7 @@
 # CARGOPULSE — Granular 8-Sprint Roadmap & Execution Matrix
 
 > **Project:** CargoPulse (Enterprise Logistics Operations & 5-Leg Freight Audit Platform)  
-> **Status:** Sprint 3 Completed / Ready for Sprint 4  
+> **Status:** Sprint 4 Completed / Ready for Sprint 5  
 > **Tracking File:** Updated continuously at each milestone  
 
 ---
@@ -53,9 +53,9 @@
 ---
 
 ## Sprint 4: Torre de Control (Grafo DAG) & Grilla de Auditoría
-- [ ] **4.1** Integración de `@swimlane/ngx-graph` en `apps/web`.
-- [ ] **4.2** Pantalla **Control Tower**: Nodos interactivos de red (Origen, Aduana/Frontera, Destino), aristas con estado de tránsito y filtrado reactivo bidireccional.
-- [ ] **4.3** Pantalla **Freight Cost Audit**: Matriz de 5 tramos, cálculo instantáneo de varianza, semáforos cromáticos (Verde $\le 0\%$, Ámbar $\le 5\%$, Rojo $> 5\%$) y exportación a Excel estilizado vía `ExcelJS`.
+- [x] **4.1** Integración de `@swimlane/ngx-graph` en `apps/web`.
+- [x] **4.2** Pantalla **Control Tower**: Nodos interactivos de red (Origen, Aduana/Frontera, Destino), aristas con estado de tránsito y filtrado reactivo bidireccional.
+- [x] **4.3** Pantalla **Freight Cost Audit**: Matriz de 5 tramos, cálculo instantáneo de varianza, semáforos cromáticos (Verde $\le 0\%$, Ámbar $\le 5\%$, Rojo $> 5\%$) y exportación a Excel estilizado vía `ExcelJS`.
 
 ---
 
@@ -73,6 +73,7 @@
 - [ ] **6.5** `Dockerfile` multi-stage para NestJS (`apps/api`).
 - [ ] **6.6** `Dockerfile` con Nginx para Angular 21 (`apps/web`).
 - [ ] **6.7** `docker-compose.yml` para levantar PostgreSQL, API y Web con un solo comando.
+- [ ] **6.8** Validar sincronización de PostgreSQL en contenedor Docker, ejecutar migraciones/seed y verificar que NestJS opere 100% sobre la base de datos persistente desactivando el fallback en memoria.
 
 ---
 
