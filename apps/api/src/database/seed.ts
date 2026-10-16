@@ -25,17 +25,16 @@ async function main() {
 
   // Password hashing
   const saltRounds = 10;
-  const adminPasswordHash = await bcrypt.hash('Admin1234!', saltRounds);
-  const operatorPasswordHash = await bcrypt.hash('Operator1234!', saltRounds);
-  const auditorPasswordHash = await bcrypt.hash('Auditor1234!', saltRounds);
+  const demoPasswordHash = await bcrypt.hash('Password123!', saltRounds);
 
   // 1. Seed Users
   const adminUser = await prisma.user.create({
     data: {
+      id: '11111111-1111-1111-1111-111111111111',
       email: 'admin@cargopulse.com',
-      passwordHash: adminPasswordHash,
-      firstName: 'Sarah',
-      lastName: 'Chen',
+      passwordHash: demoPasswordHash,
+      firstName: 'Kevin',
+      lastName: 'Torres',
       role: Role.ADMIN,
       isActive: true,
     },
@@ -43,10 +42,11 @@ async function main() {
 
   const operatorUser = await prisma.user.create({
     data: {
+      id: '22222222-2222-2222-2222-222222222222',
       email: 'operator@cargopulse.com',
-      passwordHash: operatorPasswordHash,
-      firstName: 'Elena',
-      lastName: 'Reyes',
+      passwordHash: demoPasswordHash,
+      firstName: 'Carlos',
+      lastName: 'Mendoza',
       role: Role.LOGISTICS_OPERATOR,
       isActive: true,
     },
@@ -54,10 +54,11 @@ async function main() {
 
   const auditorUser = await prisma.user.create({
     data: {
+      id: '33333333-3333-3333-3333-333333333333',
       email: 'auditor@cargopulse.com',
-      passwordHash: auditorPasswordHash,
-      firstName: 'Marcus',
-      lastName: 'Vance',
+      passwordHash: demoPasswordHash,
+      firstName: 'Elena',
+      lastName: 'Rivas',
       role: Role.FREIGHT_AUDITOR,
       isActive: true,
     },
