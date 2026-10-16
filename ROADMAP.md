@@ -1,7 +1,7 @@
 # CARGOPULSE — Granular 8-Sprint Roadmap & Execution Matrix
 
 > **Project:** CargoPulse (Enterprise Logistics Operations & 5-Leg Freight Audit Platform)  
-> **Status:** Sprint 2 Completed / Ready for Sprint 3  
+> **Status:** Sprint 3 Completed / Ready for Sprint 4  
 > **Tracking File:** Updated continuously at each milestone  
 
 ---
@@ -43,12 +43,12 @@
 ---
 
 ## Sprint 3: Frontend Base & UI System (Angular 21)
-- [ ] **3.1** Configuración de Tailwind CSS con paleta corporativa logística y tipografía Inter.
-- [ ] **3.2** Crear `AuthStore` reactivo basado en Angular Signals (`signal()`, `computed()`).
-- [ ] **3.3** Implementar `AuthInterceptor` para inyección de token JWT y manejo de 401.
-- [ ] **3.4** Construir Layout maestro: Navbar con usuario/rol, Sidebar colapsable responsivo y RouterOutlet.
-- [ ] **3.5** Construir pantalla de Login con formulario reactivo y validaciones visuales.
-- [ ] **3.6** Implementar Guards de rutas funcionales (`canActivateFn`).
+- [x] **3.1** Configuración de Tailwind CSS con paleta corporativa logística y tipografía Inter.
+- [x] **3.2** Crear `AuthStore` reactivo basado en Angular Signals (`signal()`, `computed()`) con hidratación segura.
+- [x] **3.3** Implementar `AuthInterceptor` funcional para inyección de token JWT y manejo de 401.
+- [x] **3.4** Construir Layout maestro: `NavbarComponent` con usuario/rol/status, `SidebarComponent` colapsable responsivo y `MainLayoutComponent` con `RouterOutlet`.
+- [x] **3.5** Construir pantalla de Login con formulario reactivo, validaciones visuales, loading spinner y 1-click Quick Demo logins (Admin, Operador, Auditor).
+- [x] **3.6** Implementar Guards de rutas funcionales (`authGuard` y `publicGuard` con redirección por `UrlTree`).
 
 ---
 
