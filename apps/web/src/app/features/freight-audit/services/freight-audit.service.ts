@@ -290,9 +290,12 @@ export class FreightAuditService {
   /**
    * Requests freight audit Excel report binary stream and triggers browser download.
    */
-  exportExcel(): Observable<Blob> {
+  exportExcel(lang: string = 'es'): Observable<Blob> {
+    const query = lang ? `?lang=${encodeURIComponent(lang)}` : '';
+    const filename = lang === 'es' ? 'reporte-auditoria-fletes.xlsx' : 'freight-audit-report.xlsx';
+
     return this.http
-      .get(`${this.baseUrl}/export/excel`, { responseType: 'blob' })
+      .get(`${this.baseUrl}/export/excel${query}`, { responseType: 'blob' })
       .pipe(
         map((blob: Blob) => {
           if (!blob.type || blob.type === 'application/octet-stream') {
@@ -303,7 +306,7 @@ export class FreightAuditService {
           return blob;
         }),
         tap((blob: Blob) => {
-          this.triggerBlobDownload(blob, 'freight-audit-report.xlsx');
+          this.triggerBlobDownload(blob, filename);
         }),
         catchError((error) => {
           console.error('Freight audit Excel export failed:', error);

@@ -790,7 +790,8 @@ export class FreightAuditComponent implements OnInit {
 
   exportExcel(): void {
     this.isExporting.set(true);
-    this.freightAuditService.exportExcel().subscribe({
+    const lang = this.languageService.currentLang();
+    this.freightAuditService.exportExcel(lang).subscribe({
       next: () => {
         this.isExporting.set(false);
       },

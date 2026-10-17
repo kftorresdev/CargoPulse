@@ -68,7 +68,7 @@ describe('FreightAuditController', () => {
 
   it('should delegate Excel export to service', async () => {
     const mockRes = {} as Response;
-    await controller.exportToExcel(mockRes);
-    expect(serviceMock.exportToExcel).toHaveBeenCalledWith(mockRes);
+    await controller.exportToExcel(mockRes, 'es');
+    expect(serviceMock.exportToExcel).toHaveBeenCalledWith(mockRes, 'es');
   });
 });

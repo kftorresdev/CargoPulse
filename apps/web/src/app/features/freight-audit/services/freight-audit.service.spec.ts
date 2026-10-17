@@ -290,15 +290,33 @@ describe('FreightAuditService', () => {
   });
 
   describe('exportExcel', () => {
-    it('should request blob from API and trigger download', () => {
+    it('should request localized Spanish blob from API and trigger download when lang="es"', () => {
       const spyTrigger = vi.spyOn(service, 'triggerBlobDownload').mockImplementation(() => {});
       const mockBlob = new Blob(['mock binary'], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
 
-      service.exportExcel().subscribe();
+      service.exportExcel('es').subscribe();
 
-      const req = httpMock.expectOne('/api/freight-audit/export/excel');
+      const req = httpMock.expectOne('/api/freight-audit/export/excel?lang=es');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockBlob);
+
+      expect(spyTrigger).toHaveBeenCalledWith(
+        mockBlob,
+        'reporte-auditoria-fletes.xlsx'
+      );
+    });
+
+    it('should request localized English blob from API and trigger download when lang="en"', () => {
+      const spyTrigger = vi.spyOn(service, 'triggerBlobDownload').mockImplementation(() => {});
+      const mockBlob = new Blob(['mock binary'], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+
+      service.exportExcel('en').subscribe();
+
+      const req = httpMock.expectOne('/api/freight-audit/export/excel?lang=en');
       expect(req.request.method).toBe('GET');
       req.flush(mockBlob);
 
@@ -312,14 +330,14 @@ describe('FreightAuditService', () => {
       const spyTrigger = vi.spyOn(service, 'triggerBlobDownload').mockImplementation(() => {});
 
       let errorOccurred = false;
-      service.exportExcel().subscribe({
+      service.exportExcel('es').subscribe({
         next: () => {},
         error: () => {
           errorOccurred = true;
         },
       });
 
-      const req = httpMock.expectOne('/api/freight-audit/export/excel');
+      const req = httpMock.expectOne('/api/freight-audit/export/excel?lang=es');
       req.error(new ProgressEvent('error'));
 
       expect(errorOccurred).toBe(true);

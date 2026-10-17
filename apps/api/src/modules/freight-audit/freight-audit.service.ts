@@ -460,7 +460,7 @@ export class FreightAuditService {
    * Generates and exports the freight cost audit report to Excel (.xlsx) with styled headers,
    * formatted currency & percentage cells, and conditional color highlighting.
    */
-  async exportToExcel(res: Response): Promise<void> {
+  async exportToExcel(res: Response, lang?: string): Promise<void> {
     interface ExcelRowData {
       trackingNumber: string;
       carrier: string;
@@ -473,6 +473,55 @@ export class FreightAuditService {
       status: StageStatus;
       auditNotes: string | null;
     }
+
+    const isSpanish = (lang || '').toLowerCase() === 'es';
+
+    const stageLabels: Record<StageType, { es: string; en: string }> = {
+      [StageType.ORIGIN_HANDLING]: { es: 'Manejo en Origen', en: 'Origin Handling' },
+      [StageType.TRANSIT_1]: { es: 'Tránsito Principal 1', en: 'Transit 1' },
+      [StageType.CUSTOMS_BORDER]: { es: 'Aduana Fronteriza', en: 'Customs Border' },
+      [StageType.TRANSIT_2]: { es: 'Tránsito Terrestre 2', en: 'Transit 2' },
+      [StageType.FINAL_DESTINATION]: { es: 'Destino Final', en: 'Final Destination' },
+    };
+
+    const statusLabels: Record<StageStatus, { es: string; en: string }> = {
+      [StageStatus.APPROVED]: { es: 'APROBADO', en: 'APPROVED' },
+      [StageStatus.DISPUTED]: { es: 'EN DISPUTA', en: 'DISPUTED' },
+      [StageStatus.PENDING]: { es: 'PENDIENTE', en: 'PENDING' },
+    };
+
+    const defaultNotesTranslations: Record<string, string> = {
+      'Export documentation and container drayage verified.':
+        'Documentación de exportación y arrastre de contenedor verificados.',
+      'Bunker adjustment factor surcharge disputed with ocean carrier.':
+        'Recargo por factor de ajuste de combustible disputado con transportista marítimo.',
+      'Intensive exam fee applied due to random CBP inspection.':
+        'Tarifa de examen intensivo aplicada por inspección aleatoria de CBP.',
+      'Rail intermodal booking confirmed.':
+        'Reserva ferroviaria intermodal confirmada.',
+      'Final warehouse delivery scheduled.':
+        'Entrega final a almacén programada.',
+      'Origin terminal handling fees matched contract.':
+        'Tarifas de manejo de terminal de origen coinciden con contrato.',
+      'Transatlantic ocean freight cleared.':
+        'Flete marítimo transatlántico liquidado.',
+      'Cleared Newark entry via automated commercial environment.':
+        'Entrada aduanera en Newark autorizada vía sistema automatizado.',
+      'Chassis split charge added without prior notification.':
+        'Cargo por división de chasis agregado sin notificación previa.',
+      'Cross-dock delivery window booked for 14:00 CST.':
+        'Ventana de entrega cross-dock reservada para las 14:00 CST.',
+      'Cold chain verification passed at ICN warehouse.':
+        'Verificación de cadena de frío aprobada en almacén ICN.',
+      'Air freight under contracted volume tier rebate applied.':
+        'Flete aéreo con reembolso por nivel de volumen contratado aplicado.',
+      'EU customs entry processed under ATLAS system.':
+        'Entrada aduanera en la UE procesada bajo el sistema ATLAS.',
+      'Temperature controlled dedicated truck to distribution center.':
+        'Camión dedicado con temperatura controlada hacia centro de distribución.',
+      'Proof of Delivery signed and archived in document store.':
+        'Comprobante de entrega (POD) firmado y archivado en repositorio documental.',
+    };
 
     let rows: ExcelRowData[] | null = null;
 
@@ -540,20 +589,36 @@ export class FreightAuditService {
     workbook.creator = 'CargoPulse Platform';
     workbook.created = new Date();
 
-    const worksheet = workbook.addWorksheet('Freight Cost Audit');
+    const worksheetName = isSpanish
+      ? 'Auditoría de Costos de Flete'
+      : 'Freight Cost Audit';
+    const worksheet = workbook.addWorksheet(worksheetName);
 
-    worksheet.columns = [
-      { header: 'Shipment Tracking', key: 'trackingNumber', width: 22 },
-      { header: 'Carrier', key: 'carrier', width: 22 },
-      { header: 'Stage', key: 'stageType', width: 22 },
-      { header: 'Order', key: 'stageOrder', width: 10 },
-      { header: 'Contracted ($)', key: 'contractedCost', width: 18 },
-      { header: 'Actual ($)', key: 'actualCost', width: 18 },
-      { header: 'Variance ($)', key: 'variance', width: 18 },
-      { header: 'Variance (%)', key: 'variancePercent', width: 16 },
-      { header: 'Status', key: 'status', width: 16 },
-      { header: 'Audit Notes', key: 'auditNotes', width: 36 },
-    ];
+    worksheet.columns = isSpanish
+      ? [
+          { header: 'Rastreo de Envío', key: 'trackingNumber', width: 22 },
+          { header: 'Transportista', key: 'carrier', width: 22 },
+          { header: 'Etapa', key: 'stageType', width: 24 },
+          { header: 'Orden', key: 'stageOrder', width: 10 },
+          { header: 'Contratado ($)', key: 'contractedCost', width: 18 },
+          { header: 'Costo Real ($)', key: 'actualCost', width: 18 },
+          { header: 'Desviación ($)', key: 'variance', width: 18 },
+          { header: 'Varianza (%)', key: 'variancePercent', width: 16 },
+          { header: 'Estado', key: 'status', width: 16 },
+          { header: 'Notas de Auditoría', key: 'auditNotes', width: 38 },
+        ]
+      : [
+          { header: 'Shipment Tracking', key: 'trackingNumber', width: 22 },
+          { header: 'Carrier', key: 'carrier', width: 22 },
+          { header: 'Stage', key: 'stageType', width: 22 },
+          { header: 'Order', key: 'stageOrder', width: 10 },
+          { header: 'Contracted ($)', key: 'contractedCost', width: 18 },
+          { header: 'Actual Cost ($)', key: 'actualCost', width: 18 },
+          { header: 'Variance ($)', key: 'variance', width: 18 },
+          { header: 'Variance (%)', key: 'variancePercent', width: 16 },
+          { header: 'Status', key: 'status', width: 16 },
+          { header: 'Audit Notes', key: 'auditNotes', width: 38 },
+        ];
 
     // Format header row with dark background (#1E293B) and white bold font
     const headerRow = worksheet.getRow(1);
@@ -580,17 +645,30 @@ export class FreightAuditService {
     });
 
     for (const rowData of rows) {
+      const stageTypeDisplay = isSpanish
+        ? stageLabels[rowData.stageType]?.es || rowData.stageType
+        : stageLabels[rowData.stageType]?.en || rowData.stageType;
+
+      const statusDisplay = isSpanish
+        ? statusLabels[rowData.status]?.es || rowData.status
+        : statusLabels[rowData.status]?.en || rowData.status;
+
+      let notesDisplay = rowData.auditNotes || '';
+      if (isSpanish && notesDisplay && defaultNotesTranslations[notesDisplay]) {
+        notesDisplay = defaultNotesTranslations[notesDisplay];
+      }
+
       const row = worksheet.addRow({
         trackingNumber: rowData.trackingNumber,
         carrier: rowData.carrier,
-        stageType: rowData.stageType,
+        stageType: stageTypeDisplay,
         stageOrder: rowData.stageOrder,
         contractedCost: rowData.contractedCost,
         actualCost: rowData.actualCost,
         variance: rowData.variance,
         variancePercent: rowData.variancePercent / 100,
-        status: rowData.status,
-        auditNotes: rowData.auditNotes || '',
+        status: statusDisplay,
+        auditNotes: notesDisplay,
       });
 
       row.height = 22;
@@ -653,39 +731,59 @@ export class FreightAuditService {
         };
       });
 
-      // Conditional styling:
+      // Conditional styling for Variance & Percentage:
       // Green background for variance <= 0%
       // Red background for variance > 5%
       // Yellow/Amber for 0% < variance <= 5%
-      let fillColor = 'FFDCFCE7'; // Soft Green
-      let fontColor = 'FF166534'; // Forest Green
+      let varianceFillColor = 'FFDCFCE7'; // Soft Green
+      let varianceFontColor = 'FF166534'; // Forest Green
       if (rowData.variancePercent > 5) {
-        fillColor = 'FFFEE2E2'; // Soft Red
-        fontColor = 'FF991B1B'; // Deep Crimson
+        varianceFillColor = 'FFFEE2E2'; // Soft Red
+        varianceFontColor = 'FF991B1B'; // Deep Crimson
       } else if (rowData.variancePercent > 0) {
-        fillColor = 'FFFEF3C7'; // Soft Amber / Yellow
-        fontColor = 'FF92400E'; // Deep Amber
+        varianceFillColor = 'FFFEF3C7'; // Soft Amber / Yellow
+        varianceFontColor = 'FF92400E'; // Deep Amber
       }
 
-      const conditionalFill: ExcelJS.Fill = {
+      const varianceFill: ExcelJS.Fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: fillColor },
+        fgColor: { argb: varianceFillColor },
       };
 
       const varianceCell = row.getCell('variance');
       const percentCell = row.getCell('variancePercent');
+      varianceCell.fill = varianceFill;
+      varianceCell.font = { color: { argb: varianceFontColor }, bold: true };
+      percentCell.fill = varianceFill;
+      percentCell.font = { color: { argb: varianceFontColor }, bold: true };
+
+      // Conditional styling for Status cell (based strictly on stage status):
+      // APPROVED -> Soft Green
+      // DISPUTED -> Soft Red
+      // PENDING -> Soft Amber
+      let statusFillColor = 'FFFEF3C7'; // Soft Amber default for PENDING
+      let statusFontColor = 'FF92400E';
+      if (rowData.status === StageStatus.APPROVED) {
+        statusFillColor = 'FFDCFCE7'; // Soft Green
+        statusFontColor = 'FF166534'; // Forest Green
+      } else if (rowData.status === StageStatus.DISPUTED) {
+        statusFillColor = 'FFFEE2E2'; // Soft Red
+        statusFontColor = 'FF991B1B'; // Deep Crimson
+      }
+
       const statusCell = row.getCell('status');
-
-      varianceCell.fill = conditionalFill;
-      varianceCell.font = { color: { argb: fontColor }, bold: true };
-
-      percentCell.fill = conditionalFill;
-      percentCell.font = { color: { argb: fontColor }, bold: true };
-
-      statusCell.fill = conditionalFill;
-      statusCell.font = { color: { argb: fontColor }, bold: true };
+      statusCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: statusFillColor },
+      };
+      statusCell.font = { color: { argb: statusFontColor }, bold: true };
     }
+
+    const filename = isSpanish
+      ? 'reporte-auditoria-fletes.xlsx'
+      : 'freight-audit-report.xlsx';
 
     res.setHeader(
       'Content-Type',
@@ -693,7 +791,7 @@ export class FreightAuditService {
     );
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename=freight-audit-report.xlsx',
+      `attachment; filename=${filename}`,
     );
 
     const buffer = await workbook.xlsx.writeBuffer();

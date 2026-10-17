@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Param,
   Patch,
+  Query,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -13,6 +14,7 @@ import {
   ApiOperation,
   ApiParam,
   ApiProduces,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -47,6 +49,12 @@ export class FreightAuditController {
   @ApiOperation({
     summary: 'Export freight cost audit report to formatted Excel (.xlsx)',
   })
+  @ApiQuery({
+    name: 'lang',
+    required: false,
+    description: 'Language code for report labels and stage translations (es or en)',
+    enum: ['es', 'en'],
+  })
   @ApiProduces(
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
@@ -58,8 +66,11 @@ export class FreightAuditController {
       format: 'binary',
     },
   })
-  async exportToExcel(@Res() res: Response): Promise<void> {
-    await this.freightAuditService.exportToExcel(res);
+  async exportToExcel(
+    @Res() res: Response,
+    @Query('lang') lang?: string,
+  ): Promise<void> {
+    await this.freightAuditService.exportToExcel(res, lang);
   }
 
   @Get('shipment/:shipmentId')

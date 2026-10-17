@@ -282,6 +282,23 @@ describe('FreightAuditService', () => {
       expect(bufferSent).not.toBeNull();
       expect(Buffer.isBuffer(bufferSent)).toBe(true);
     });
+
+    it('should generate localized Spanish filename and headers when lang="es"', async () => {
+      const setHeaderSpy = vi.fn();
+      const endSpy = vi.fn();
+      const mockRes = {
+        setHeader: setHeaderSpy,
+        end: endSpy,
+      } as unknown as Response;
+
+      await service.exportToExcel(mockRes, 'es');
+
+      expect(setHeaderSpy).toHaveBeenCalledWith(
+        'Content-Disposition',
+        'attachment; filename=reporte-auditoria-fletes.xlsx',
+      );
+      expect(endSpy).toHaveBeenCalled();
+    });
   });
 
   describe('Dual-Mode In-Memory Resilience (Offline Fallback)', () => {
