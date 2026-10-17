@@ -1,7 +1,7 @@
 # CARGOPULSE — Granular 8-Sprint Roadmap & Execution Matrix
 
 > **Project:** CargoPulse (Enterprise Logistics Operations & 5-Leg Freight Audit Platform)  
-> **Status:** Sprint 6 Completed / Ready for Sprint 7  
+> **Status:** All 8 Sprints Completed (Production Ready & Published)  
 > **Tracking File:** Updated continuously at each milestone  
 
 ---
@@ -78,8 +78,8 @@
 ---
 
 ## Sprint 7: CI/CD, Despliegue Público & Publicación en GitHub
-- [ ] **7.1** Pipeline de GitHub Actions en `.github/workflows/ci.yml` (Lint, Build, Playwright headless).
-- [ ] **7.2** Despliegue de API y Base de Datos (Render / Supabase / Railway).
-- [ ] **7.3** Despliegue de Frontend (Vercel / Netlify).
-- [ ] **7.4** `README.md` maestro en inglés con badges, arquitectura Mermaid, capturas de pantalla y guía de inicio rápido.
-- [ ] **7.5** Publicación del repositorio público en GitHub y vinculación en perfil profesional.
+- [x] **7.1** Pipeline de GitHub Actions en `.github/workflows/ci.yml` (Lint, Build, Playwright headless).
+- [x] **7.2** Despliegue de API y Base de Datos (Render / Supabase / Railway).
+- [x] **7.3** Despliegue de Frontend (Vercel / Netlify).
+- [x] **7.4** `README.md` maestro en inglés con badges, arquitectura Mermaid, capturas de pantalla y guía de inicio rápido.
+- [x] **7.5** Publicación del repositorio público en GitHub y vinculación en perfil profesional.

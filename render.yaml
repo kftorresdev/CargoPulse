@@ -1,0 +1,45 @@
+services:
+  # CargoPulse Backend API (NestJS Modular Monolith)
+  - type: web
+    name: cargopulse-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: ./apps/api
+    plan: starter
+    region: oregon
+    healthCheckPath: /api/docs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cargopulse-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: "*"
+
+  # CargoPulse Frontend Web (Angular 21 Standalone SPA + Nginx)
+  - type: web
+    name: cargopulse-web
+    runtime: docker
+    dockerfilePath: ./apps/web/Dockerfile
+    dockerContext: ./apps/web
+    plan: starter
+    region: oregon
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: "80"
+
+databases:
+  # CargoPulse PostgreSQL Database
+  - name: cargopulse-db
+    databaseName: cargopulse
+    user: postgres
+    plan: free
+    region: oregon
+    ipAllowList: []
