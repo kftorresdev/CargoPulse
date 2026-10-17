@@ -21,7 +21,19 @@ export class ControlTowerService {
    * Gracefully falls back to demo cross-border supply chain data if the HTTP endpoint is unreachable or unseeded.
    */
   getTopologyData(): Observable<TopologyData> {
-    return this.http.get<TopologyData>(this.apiUrl).pipe(
+    return this.http.get<TopologyData | { data?: TopologyData }>(this.apiUrl).pipe(
+      map((res) => {
+        const payload = (res as any)?.data ?? res;
+        if (
+          payload &&
+          Array.isArray(payload.nodes) &&
+          Array.isArray(payload.links) &&
+          Array.isArray(payload.shipments)
+        ) {
+          return payload as TopologyData;
+        }
+        return this.getDemoData();
+      }),
       catchError(() => of(this.getDemoData()))
     );
   }

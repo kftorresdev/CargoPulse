@@ -237,8 +237,23 @@ export class FreightAuditService {
    */
   getShipmentAudit(shipmentId: string): Observable<FreightStage[]> {
     return this.http
-      .get<FreightStage[]>(`${this.baseUrl}/shipment/${shipmentId}`)
+      .get<FreightStage[] | { data?: FreightStage[] }>(
+        `${this.baseUrl}/shipment/${shipmentId}`
+      )
       .pipe(
+        map((res) => {
+          const stages = (res as any)?.data ?? res;
+          if (Array.isArray(stages) && stages.length > 0) {
+            this.inMemoryStages[shipmentId] = JSON.parse(
+              JSON.stringify(stages)
+            );
+            return stages as FreightStage[];
+          }
+          const fallbackStages =
+            this.inMemoryStages[shipmentId] ??
+            this.inMemoryStages['CP-2026-X9810'];
+          return JSON.parse(JSON.stringify(fallbackStages));
+        }),
         catchError(() => {
           const fallbackStages =
             this.inMemoryStages[shipmentId] ??
@@ -256,8 +271,12 @@ export class FreightAuditService {
     payload: UpdateStageAuditPayload
   ): Observable<FreightStage> {
     return this.http
-      .patch<FreightStage>(`${this.baseUrl}/stage/${stageId}`, payload)
+      .patch<FreightStage | { data?: FreightStage }>(
+        `${this.baseUrl}/stage/${stageId}`,
+        payload
+      )
       .pipe(
+        map((res: any) => (res?.data ?? res) as FreightStage),
         tap((updatedStage) => {
           this.applyLocalStageUpdate(updatedStage);
         }),
@@ -314,15 +333,16 @@ export class FreightAuditService {
   }
 
   private normalizeSummary(apiData: any): FreightAuditSummary {
+    const raw = apiData?.data ?? apiData ?? {};
     const stageBreakdown: StageBreakdown[] =
-      apiData.stageBreakdown ?? apiData.breakdown ?? [];
+      raw.stageBreakdown ?? raw.breakdown ?? [];
 
     return {
-      totalContractedCost: Number(apiData.totalContractedCost ?? 0),
-      totalActualCost: Number(apiData.totalActualCost ?? 0),
-      totalVariance: Number(apiData.totalVariance ?? 0),
-      variancePercentage: Number(apiData.variancePercentage ?? 0),
-      disputedStagesCount: Number(apiData.disputedStagesCount ?? 0),
+      totalContractedCost: Number(raw.totalContractedCost ?? 0),
+      totalActualCost: Number(raw.totalActualCost ?? 0),
+      totalVariance: Number(raw.totalVariance ?? 0),
+      variancePercentage: Number(raw.variancePercentage ?? 0),
+      disputedStagesCount: Number(raw.disputedStagesCount ?? 0),
       stageBreakdown,
       breakdown: stageBreakdown,
     };

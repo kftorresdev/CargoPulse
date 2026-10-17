@@ -221,7 +221,7 @@ interface ShipmentOption {
             [ngClass]="isDisputed() ? 'text-rose-400' : 'text-slate-100'"
           >
             {{ disputedCount() }}
-            <span class="text-sm font-normal text-slate-400">/ {{ stages().length }} {{ languageService.t('freight_audit.kpi.legs') }}</span>
+            <span class="text-sm font-normal text-slate-400">/ {{ (stages() || []).length }} {{ languageService.t('freight_audit.kpi.legs') }}</span>
           </div>
           <div class="mt-1 text-xs text-slate-400">
             {{
@@ -274,7 +274,7 @@ interface ShipmentOption {
                         : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                   "
                 >
-                  {{ shipment.subtitle }}
+                  {{ getShipmentSubtitle(shipment.id) }}
                 </span>
               </div>
               <div class="text-xs text-slate-400 flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80">
@@ -366,7 +366,7 @@ interface ShipmentOption {
                       {{ getStageLabel(stage.stageType) }}
                     </div>
                     <div class="text-[10px] font-mono text-slate-500 uppercase mt-0.5">
-                      {{ stage.stageType }}
+                      {{ getStageCodeLabel(stage.stageType) }}
                     </div>
                   </td>
 
@@ -420,13 +420,13 @@ interface ShipmentOption {
                               : 'bg-sky-400'
                         "
                       ></span>
-                      {{ stage.status }}
+                      {{ getStatusLabel(stage.status) }}
                     </span>
                   </td>
 
                   <!-- Audit Notes -->
-                  <td class="px-4 py-3.5 max-w-xs text-slate-400 truncate" [title]="stage.auditNotes ?? languageService.t('freight_audit.table.no_notes')">
-                    {{ stage.auditNotes || '—' }}
+                  <td class="px-4 py-3.5 max-w-xs text-slate-400 truncate" [title]="stage.auditNotes ? formatAuditNote(stage.auditNotes) : languageService.t('freight_audit.table.no_notes')">
+                    {{ formatAuditNote(stage.auditNotes) || '—' }}
                   </td>
 
                   <!-- Edit/Audit Action Button -->
@@ -561,7 +561,7 @@ interface ShipmentOption {
                       class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border"
                       [ngClass]="getStatusBadgeClass(previewStatus())"
                     >
-                      {{ previewStatus() }}
+                      {{ getStatusLabel(previewStatus()) }}
                     </span>
                   </div>
                 </div>
@@ -637,6 +637,39 @@ export class FreightAuditComponent implements OnInit {
   private readonly freightAuditService = inject(FreightAuditService);
   readonly languageService = inject(LanguageService);
 
+  private readonly seedNotesTranslations: Record<string, string> = {
+    'Export documentation and container drayage verified.':
+      'Documentación de exportación y arrastre de contenedor verificados.',
+    'Bunker adjustment factor surcharge disputed with ocean carrier.':
+      'Recargo por factor de ajuste de combustible (BAF) en disputa con naviera.',
+    'Intensive exam fee applied due to random CBP inspection.':
+      'Cargo por revisión intensiva aplicado debido a inspección aleatoria de CBP.',
+    'Rail intermodal booking confirmed.':
+      'Reserva intermodal ferroviaria confirmada.',
+    'Final warehouse delivery scheduled.':
+      'Entrega final en almacén programada.',
+    'Origin terminal handling fees matched contract.':
+      'Cargos por manejo en terminal de origen coinciden con el contrato.',
+    'Transatlantic ocean freight cleared.':
+      'Flete marítimo transatlántico liquidado.',
+    'Cleared Newark entry via automated commercial environment.':
+      'Entrada por Newark liberada vía entorno comercial automatizado (ACE).',
+    'Chassis split charge added without prior notification.':
+      'Cargo por separación de chasis agregado sin notificación previa.',
+    'Cross-dock delivery window booked for 14:00 CST.':
+      'Ventana de entrega cross-dock reservada para las 14:00 CST.',
+    'Cold chain verification passed at ICN warehouse.':
+      'Verificación de cadena de frío aprobada en almacén ICN.',
+    'Air freight under contracted volume tier rebate applied.':
+      'Reembolso aplicado por nivel de volumen contratado en flete aéreo.',
+    'EU customs entry processed under ATLAS system.':
+      'Entrada aduanal en la UE procesada bajo el sistema ATLAS.',
+    'Temperature controlled dedicated truck to distribution center.':
+      'Camión dedicado con control de temperatura hacia centro de distribución.',
+    'Proof of Delivery signed and archived in document store.':
+      'Comprobante de entrega (POD) firmado y archivado en repositorio documental.',
+  };
+
   readonly shipments: ShipmentOption[] = [
     {
       id: 'CP-2026-X9810',
@@ -674,13 +707,15 @@ export class FreightAuditComponent implements OnInit {
   previewStatus = signal<StageStatus>('PENDING');
 
   // Computed Financial Metrics for current shipment
-  totalContracted = computed(() =>
-    this.stages().reduce((acc, s) => acc + s.contractedCost, 0)
-  );
+  totalContracted = computed(() => {
+    const list = Array.isArray(this.stages()) ? this.stages() : [];
+    return list.reduce((acc, s) => acc + s.contractedCost, 0);
+  });
 
-  totalActual = computed(() =>
-    this.stages().reduce((acc, s) => acc + s.actualCost, 0)
-  );
+  totalActual = computed(() => {
+    const list = Array.isArray(this.stages()) ? this.stages() : [];
+    return list.reduce((acc, s) => acc + s.actualCost, 0);
+  });
 
   totalVariance = computed(() =>
     Number((this.totalActual() - this.totalContracted()).toFixed(2))
@@ -693,13 +728,15 @@ export class FreightAuditComponent implements OnInit {
       : 0;
   });
 
-  isDisputed = computed(() =>
-    this.stages().some((s) => s.status === 'DISPUTED')
-  );
+  isDisputed = computed(() => {
+    const list = Array.isArray(this.stages()) ? this.stages() : [];
+    return list.some((s) => s.status === 'DISPUTED');
+  });
 
-  disputedCount = computed(() =>
-    this.stages().filter((s) => s.status === 'DISPUTED').length
-  );
+  disputedCount = computed(() => {
+    const list = Array.isArray(this.stages()) ? this.stages() : [];
+    return list.filter((s) => s.status === 'DISPUTED').length;
+  });
 
   // Live preview calculations for the adjustment modal
   previewVariance = computed(() => {
@@ -739,7 +776,9 @@ export class FreightAuditComponent implements OnInit {
   loadStages(shipmentId: string): void {
     this.freightAuditService.getShipmentAudit(shipmentId).subscribe({
       next: (stages) => {
-        this.stages.set(stages);
+        const raw = (stages as any)?.data ?? stages;
+        const stageList = Array.isArray(raw) ? raw : [];
+        this.stages.set(stageList);
       },
     });
   }
@@ -822,12 +861,14 @@ export class FreightAuditComponent implements OnInit {
         status: formValue.status,
       })
       .subscribe({
-        next: (updated) => {
-          // Update stages signal array
-          const updatedStages = this.stages().map((s) =>
-            s.id === updated.id ? updated : s
+        next: (updatedStage) => {
+          const actualUpdated: FreightStage =
+            (updatedStage as any)?.data ?? updatedStage;
+          this.stages.update((current) =>
+            (Array.isArray(current) ? current : []).map((s) =>
+              s.id === actualUpdated.id ? actualUpdated : s
+            )
           );
-          this.stages.set(updatedStages);
           this.isSavingStage.set(false);
           this.closeEditModal();
           // Reload summary to reflect adjustments in portfolio
@@ -837,6 +878,36 @@ export class FreightAuditComponent implements OnInit {
           this.isSavingStage.set(false);
         },
       });
+  }
+
+  getShipmentSubtitle(id: string): string {
+    const key = `freight_audit.shipment.${id}.subtitle`;
+    const translated = this.languageService.t(key);
+    if (translated !== key) {
+      return translated;
+    }
+    const found = this.shipments.find((s) => s.id === id);
+    return found?.subtitle ?? '';
+  }
+
+  getStatusLabel(status: StageStatus): string {
+    const key = `freight_audit.status.${status}`;
+    const translated = this.languageService.t(key);
+    return translated === key ? status : translated;
+  }
+
+  getStageCodeLabel(stageType: StageType): string {
+    const key = `freight_audit.stage_code.${stageType}`;
+    const translated = this.languageService.t(key);
+    return translated === key ? stageType : translated;
+  }
+
+  formatAuditNote(note: string | null | undefined): string {
+    if (!note) return '';
+    if (this.languageService.currentLang() === 'es') {
+      return this.seedNotesTranslations[note] ?? note;
+    }
+    return note;
   }
 
   getStageLabel(stageType: StageType): string {

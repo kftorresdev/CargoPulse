@@ -373,19 +373,46 @@ describe('FreightAuditComponent', () => {
 
       // Check first row (Origin Drayage in Spanish default)
       expect(rows[0].textContent).toContain('Arrastre de Origen');
+      expect(rows[0].textContent).toContain('MANEJO_ORIGEN');
       expect(rows[0].textContent).toContain('$1,200.00');
-      expect(rows[0].textContent).toContain('APPROVED');
+      expect(rows[0].textContent).toContain('APROBADO');
 
       // Check second row (Transit 1 in Spanish default)
       expect(rows[1].textContent).toContain('Tránsito Internacional 1');
-      expect(rows[1].textContent).toContain('DISPUTED');
+      expect(rows[1].textContent).toContain('EN DISPUTA');
       expect(rows[1].textContent).toContain('+7.78%');
 
       // When switched to English
       component.languageService.setLanguage('en');
       fixture.detectChanges();
       expect(rows[0].textContent).toContain('Origin Drayage');
+      expect(rows[0].textContent).toContain('ORIGIN_HANDLING');
+      expect(rows[0].textContent).toContain('APPROVED');
       expect(rows[1].textContent).toContain('International Transit 1');
+      expect(rows[1].textContent).toContain('DISPUTED');
+    });
+
+    it('should translate shipment subtitles, stage codes, and default seed audit notes while keeping custom notes verbatim', () => {
+      component.languageService.setLanguage('es');
+      expect(component.getShipmentSubtitle('CP-2026-X9810')).toBe('Marítimo / Retención Aduanal');
+      expect(component.getShipmentSubtitle('CP-2026-E4421')).toBe('Varianza de Chasis');
+      expect(component.getShipmentSubtitle('CP-2026-A1092')).toBe('Carga Aérea Limpia');
+      expect(component.getStatusLabel('APPROVED')).toBe('APROBADO');
+      expect(component.getStatusLabel('DISPUTED')).toBe('EN DISPUTA');
+      expect(component.getStatusLabel('PENDING')).toBe('PENDIENTE');
+      expect(component.getStageCodeLabel('ORIGIN_HANDLING')).toBe('MANEJO_ORIGEN');
+      expect(
+        component.formatAuditNote('Export documentation and container drayage verified.')
+      ).toBe('Documentación de exportación y arrastre de contenedor verificados.');
+      expect(component.formatAuditNote('Custom user audit note')).toBe('Custom user audit note');
+
+      component.languageService.setLanguage('en');
+      expect(component.getShipmentSubtitle('CP-2026-X9810')).toBe('Ocean / Customs Hold');
+      expect(component.getStatusLabel('APPROVED')).toBe('APPROVED');
+      expect(component.getStageCodeLabel('ORIGIN_HANDLING')).toBe('ORIGIN_HANDLING');
+      expect(
+        component.formatAuditNote('Export documentation and container drayage verified.')
+      ).toBe('Export documentation and container drayage verified.');
     });
 
     it('should render the Export to Excel button and trigger export on click', () => {

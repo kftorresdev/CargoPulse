@@ -97,6 +97,38 @@ describe('ControlTowerService', () => {
       expect(result).toEqual(mockCustomData);
     });
 
+    it('should unwrap NestJS ApiResponse envelope { success, data, timestamp } when HTTP call succeeds', () => {
+      const mockCustomData: TopologyData = {
+        nodes: [
+          {
+            id: 'envelope-node',
+            label: 'Envelope Node',
+            type: 'CUSTOMS_BORDER',
+            location: 'Laredo, TX',
+            activeShipmentsCount: 2,
+            status: 'CONGESTED'
+          }
+        ],
+        links: [],
+        shipments: []
+      };
+
+      let result: TopologyData | undefined;
+      service.getTopologyData().subscribe(data => {
+        result = data;
+      });
+
+      const req = httpMock.expectOne('/api/control-tower/topology');
+      expect(req.request.method).toBe('GET');
+      req.flush({
+        success: true,
+        data: mockCustomData,
+        timestamp: '2026-10-17T00:00:00.000Z'
+      });
+
+      expect(result).toEqual(mockCustomData);
+    });
+
     it('should gracefully fallback to demo data when HTTP call fails with 404/500', () => {
       let result: TopologyData | undefined;
       service.getTopologyData().subscribe(data => {

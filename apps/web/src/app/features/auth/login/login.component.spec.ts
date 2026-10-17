@@ -143,13 +143,18 @@ describe('LoginComponent', () => {
     expect(errorAlert?.textContent).toContain('Invalid credentials provided.');
   });
 
-  it('should display loading state and disable submit button when authStore.isLoading() is true', () => {
+  it('should display loading state and disable submit button when authStore.isLoading() is true in Spanish and English', () => {
+    component.languageService.setLanguage('es');
     authStoreMock.isLoading.set(true);
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
     const submitBtn = compiled.querySelector('button[type="submit"]') as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(true);
+    expect(submitBtn.textContent).toContain('Autenticando...');
+
+    component.languageService.setLanguage('en');
+    fixture.detectChanges();
     expect(submitBtn.textContent).toContain('Authenticating...');
 
     const spinner = submitBtn.querySelector('svg.animate-spin');

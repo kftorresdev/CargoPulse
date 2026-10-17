@@ -22,11 +22,17 @@ export class TransformInterceptor<T>
     next: CallHandler<T>,
   ): Observable<ApiResponse<T>> {
     return next.handle().pipe(
-      map((data: T) => ({
-        success: true,
-        data,
-        timestamp: new Date().toISOString(),
-      })),
+      map((data: T) => {
+        const res = context.switchToHttp?.()?.getResponse?.();
+        if (res?.headersSent) {
+          return data as unknown as ApiResponse<T>;
+        }
+        return {
+          success: true,
+          data,
+          timestamp: new Date().toISOString(),
+        };
+      }),
     );
   }
 }

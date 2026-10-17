@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthStore } from '@core/state/auth.store';
+import { LanguageService, SupportedLanguage } from '@core/services/language.service';
 
 @Component({
   selector: 'app-login',
@@ -17,6 +18,33 @@ import { AuthStore } from '@core/state/auth.store';
 
       <!-- Login Card -->
       <div class="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 relative z-10 backdrop-blur-xl">
+        <!-- Compact Language Switcher in Top-Right -->
+        <div class="flex justify-end mb-2">
+          <div class="inline-flex items-center rounded-full bg-slate-800/80 p-0.5 border border-slate-700 shadow-inner select-none">
+            <button
+              type="button"
+              (click)="onLanguageClick('es')"
+              class="lang-btn-es px-2 py-0.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 focus:outline-none"
+              [ngClass]="languageService.currentLang() === 'es' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
+              title="Español"
+              aria-label="Español">
+              <span>🇪🇸</span>
+              <span>ES</span>
+            </button>
+            <span class="text-slate-600 text-[11px] font-mono px-0.5">|</span>
+            <button
+              type="button"
+              (click)="onLanguageClick('en')"
+              class="lang-btn-en px-2 py-0.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 focus:outline-none"
+              [ngClass]="languageService.currentLang() === 'en' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
+              title="English"
+              aria-label="English">
+              <span>🇺🇸</span>
+              <span>EN</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Brand Header -->
         <div class="text-center mb-8">
           <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 shadow-xl shadow-blue-500/25 border border-blue-400/20 mb-4">
@@ -28,7 +56,7 @@ import { AuthStore } from '@core/state/auth.store';
             Cargo<span class="text-blue-500">Pulse</span>
           </h1>
           <p class="text-xs text-slate-400 mt-1">
-            Logistics Control Tower & Supply Chain Intelligence
+            {{ languageService.t('login.subtitle') }}
           </p>
         </div>
 
@@ -50,7 +78,7 @@ import { AuthStore } from '@core/state/auth.store';
           <!-- Email Field -->
           <div>
             <label for="email" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-              Work Email
+              {{ languageService.t('login.work_email') }}
             </label>
             <div class="relative">
               <input
@@ -58,13 +86,13 @@ import { AuthStore } from '@core/state/auth.store';
                 type="email"
                 formControlName="email"
                 autocomplete="email"
-                placeholder="name@cargopulse.com"
+                [placeholder]="languageService.t('login.email_placeholder')"
                 class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border text-sm text-slate-100 placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
                 [ngClass]="emailInvalid() ? 'border-rose-500/60 focus:ring-rose-500' : 'border-slate-800 focus:border-blue-500'" />
             </div>
             <div *ngIf="emailInvalid()" class="mt-1 text-[11px] text-rose-400">
-              <span *ngIf="loginForm.controls.email.errors?.['required']">Email address is required.</span>
-              <span *ngIf="loginForm.controls.email.errors?.['email']">Please enter a valid email address.</span>
+              <span *ngIf="loginForm.controls.email.errors?.['required']">{{ languageService.t('login.email_required') }}</span>
+              <span *ngIf="loginForm.controls.email.errors?.['email']">{{ languageService.t('login.email_invalid') }}</span>
             </div>
           </div>
 
@@ -72,9 +100,9 @@ import { AuthStore } from '@core/state/auth.store';
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <label for="password" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                Password
+                {{ languageService.t('login.password') }}
               </label>
-              <span class="text-[11px] text-slate-500 font-mono">Min. 6 chars</span>
+              <span class="text-[11px] text-slate-500 font-mono">{{ languageService.t('login.min_chars') }}</span>
             </div>
             <div class="relative">
               <input
@@ -87,8 +115,8 @@ import { AuthStore } from '@core/state/auth.store';
                 [ngClass]="passwordInvalid() ? 'border-rose-500/60 focus:ring-rose-500' : 'border-slate-800 focus:border-blue-500'" />
             </div>
             <div *ngIf="passwordInvalid()" class="mt-1 text-[11px] text-rose-400">
-              <span *ngIf="loginForm.controls.password.errors?.['required']">Password is required.</span>
-              <span *ngIf="loginForm.controls.password.errors?.['minlength']">Password must be at least 6 characters.</span>
+              <span *ngIf="loginForm.controls.password.errors?.['required']">{{ languageService.t('login.password_required') }}</span>
+              <span *ngIf="loginForm.controls.password.errors?.['minlength']">{{ languageService.t('login.password_minlength') }}</span>
             </div>
           </div>
 
@@ -105,7 +133,7 @@ import { AuthStore } from '@core/state/auth.store';
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span>{{ authStore.isLoading() ? 'Authenticating...' : 'Sign In to Control Tower' }}</span>
+            <span>{{ authStore.isLoading() ? languageService.t('login.authenticating') : languageService.t('login.sign_in') }}</span>
           </button>
         </form>
 
@@ -113,9 +141,9 @@ import { AuthStore } from '@core/state/auth.store';
         <div class="mt-8 pt-6 border-t border-slate-800">
           <div class="text-center mb-3">
             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-              Quick Demo Access
+              {{ languageService.t('login.demo_title') }}
             </span>
-            <p class="text-[11px] text-slate-500 mt-0.5">Instant 1-click login with pre-seeded role credentials</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">{{ languageService.t('login.demo_subtitle') }}</p>
           </div>
 
           <div class="grid grid-cols-1 gap-2">
@@ -127,7 +155,7 @@ import { AuthStore } from '@core/state/auth.store';
               class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-200 text-xs font-medium transition-colors disabled:opacity-50 text-left">
               <div class="flex items-center gap-2.5">
                 <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-                <span class="font-semibold">Administrator</span>
+                <span class="font-semibold">{{ languageService.t('login.role.admin') }}</span>
               </div>
               <span class="text-[10px] font-mono text-purple-300">admin&#64;cargopulse.com</span>
             </button>
@@ -140,7 +168,7 @@ import { AuthStore } from '@core/state/auth.store';
               class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-200 text-xs font-medium transition-colors disabled:opacity-50 text-left">
               <div class="flex items-center gap-2.5">
                 <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-                <span class="font-semibold">Logistics Operator</span>
+                <span class="font-semibold">{{ languageService.t('login.role.operator') }}</span>
               </div>
               <span class="text-[10px] font-mono text-sky-300">operator&#64;cargopulse.com</span>
             </button>
@@ -153,7 +181,7 @@ import { AuthStore } from '@core/state/auth.store';
               class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-200 text-xs font-medium transition-colors disabled:opacity-50 text-left">
               <div class="flex items-center gap-2.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span class="font-semibold">Freight Auditor</span>
+                <span class="font-semibold">{{ languageService.t('login.role.auditor') }}</span>
               </div>
               <span class="text-[10px] font-mono text-emerald-300">auditor&#64;cargopulse.com</span>
             </button>
@@ -167,6 +195,7 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   readonly authStore = inject(AuthStore);
+  readonly languageService = inject(LanguageService);
 
   readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -181,6 +210,14 @@ export class LoginComponent {
         this.loginForm.enable({ emitEvent: false });
       }
     });
+  }
+
+  onLanguageClick(lang: SupportedLanguage): void {
+    if (this.languageService.currentLang() === lang) {
+      this.languageService.toggleLanguage();
+    } else {
+      this.languageService.setLanguage(lang);
+    }
   }
 
   emailInvalid(): boolean {

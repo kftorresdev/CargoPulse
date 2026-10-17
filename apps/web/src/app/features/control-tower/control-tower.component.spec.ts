@@ -217,9 +217,40 @@ describe('ControlTowerComponent', () => {
       expect(component.getStatusBadgeClass('OTHER')).toContain('border-slate-700');
     });
 
-    it('should format status strings by replacing underscores with spaces', () => {
+    it('should format status strings in Spanish and English', () => {
+      component.languageService.setLanguage('es');
+      expect(component.formatStatus('IN_TRANSIT')).toBe('EN TRÁNSITO');
+      expect(component.formatStatus('CUSTOMS_HOLD')).toBe('RETENCIÓN ADUANAL');
+      expect(component.formatStatus('OUT_FOR_DELIVERY')).toBe('EN REPARTO');
+      expect(component.formatStatus('DELIVERED')).toBe('ENTREGADO');
+
+      component.languageService.setLanguage('en');
       expect(component.formatStatus('IN_TRANSIT')).toBe('IN TRANSIT');
       expect(component.formatStatus('CUSTOMS_HOLD')).toBe('CUSTOMS HOLD');
+      expect(component.formatStatus('OUT_FOR_DELIVERY')).toBe('OUT FOR DELIVERY');
+      expect(component.formatStatus('DELIVERED')).toBe('DELIVERED');
+      expect(component.formatStatus('UNKNOWN_STATUS')).toBe('UNKNOWN STATUS');
+    });
+
+    it('should format risk badges, transport modes, and place names in Spanish and English', () => {
+      component.languageService.setLanguage('es');
+      expect(component.formatRisk('HIGH')).toBe('Riesgo ALTO');
+      expect(component.formatRisk('MEDIUM')).toBe('Riesgo MEDIO');
+      expect(component.formatRisk('LOW')).toBe('Riesgo BAJO');
+      expect(component.formatMode('ROAD')).toBe('TERRESTRE');
+      expect(component.formatMode('RAIL')).toBe('FERROVIARIO');
+      expect(component.formatPlaceName('Monterrey Assembly')).toBe('Ensamblaje Monterrey');
+      expect(component.formatPlaceName('Nuevo Laredo Customs')).toBe('Aduana Nuevo Laredo');
+      expect(component.formatNodeStatus('DELAYED')).toBe('RETRASADO');
+      expect(component.formatNodeStatus('CONGESTED')).toBe('CONGESTIONADO');
+
+      component.languageService.setLanguage('en');
+      expect(component.formatRisk('HIGH')).toBe('HIGH Risk');
+      expect(component.formatRisk('MEDIUM')).toBe('MEDIUM Risk');
+      expect(component.formatRisk('LOW')).toBe('LOW Risk');
+      expect(component.formatMode('ROAD')).toBe('ROAD');
+      expect(component.formatPlaceName('Monterrey Assembly')).toBe('Monterrey Assembly');
+      expect(component.formatNodeStatus('DELAYED')).toBe('DELAYED');
     });
 
     it('should return appropriate risk badge classes and dot colors', () => {

@@ -404,13 +404,13 @@ export class CrossBorderDagreLayout extends DagreLayout {
                       x="68"
                       y="32"
                       class="fill-slate-100 font-bold text-[11px] select-none pointer-events-none">
-                      {{ node.data.label }}
+                      {{ formatPlaceName(node.data.label) }}
                     </svg:text>
                     <svg:text
                       x="68"
                       y="46"
                       class="fill-blue-400 text-[9px] font-mono select-none pointer-events-none">
-                      ORIGIN • {{ node.data.status }}
+                      {{ languageService.t('control_tower.svg.origin') }} • {{ formatNodeStatus(node.data.status) }}
                     </svg:text>
                     <svg:text
                       x="68"
@@ -467,13 +467,13 @@ export class CrossBorderDagreLayout extends DagreLayout {
                       y="26"
                       [attr.fill]="node.data.status === 'CONGESTED' ? '#f87171' : '#fbbf24'"
                       class="text-[9px] font-mono font-bold uppercase select-none pointer-events-none">
-                      CUSTOMS BORDER
+                      {{ languageService.t('control_tower.svg.customs_border') }}
                     </svg:text>
                     <svg:text
                       x="18"
                       y="42"
                       class="fill-slate-100 font-bold text-[11px] select-none pointer-events-none">
-                      {{ node.data.label }}
+                      {{ formatPlaceName(node.data.label) }}
                     </svg:text>
                     <svg:text
                       x="18"
@@ -535,14 +535,14 @@ export class CrossBorderDagreLayout extends DagreLayout {
                       x="64"
                       y="32"
                       class="fill-slate-100 font-bold text-[11px] select-none pointer-events-none">
-                      {{ node.data.label }}
+                      {{ formatPlaceName(node.data.label) }}
                     </svg:text>
                     <svg:text
                       x="64"
                       y="46"
                       [attr.fill]="node.data.status === 'DELAYED' ? '#f87171' : '#34d399'"
                       class="text-[9px] font-mono select-none pointer-events-none">
-                      DESTINATION • {{ node.data.status }}
+                      {{ languageService.t('control_tower.svg.destination') }} • {{ formatNodeStatus(node.data.status) }}
                     </svg:text>
                     <svg:text
                       x="64"
@@ -581,9 +581,9 @@ export class CrossBorderDagreLayout extends DagreLayout {
                 @if (link.midPoint) {
                   <svg:g [attr.transform]="'translate(' + link.midPoint.x + ',' + link.midPoint.y + ')'" class="cursor-pointer">
                     <svg:rect
-                      x="-36"
+                      x="-44"
                       y="-10"
-                      width="72"
+                      width="88"
                       height="20"
                       rx="10"
                       [attr.fill]="selectedLink()?.id === link.id ? '#0284c7' : '#0f172a'"
@@ -595,7 +595,7 @@ export class CrossBorderDagreLayout extends DagreLayout {
                       y="3.5"
                       [attr.fill]="selectedLink()?.id === link.id ? '#ffffff' : '#cbd5e1'"
                       class="text-[9.5px] font-mono font-medium select-none pointer-events-none">
-                      {{ link.data?.mode }} • {{ link.data?.transitDays }}d
+                      {{ formatMode(link.data?.mode) }} • {{ link.data?.transitDays }}d
                     </svg:text>
                   </svg:g>
                 }
@@ -619,7 +619,7 @@ export class CrossBorderDagreLayout extends DagreLayout {
             <div>
               <h3 class="text-base font-semibold text-slate-100">{{ languageService.t('control_tower.table.title') }}</h3>
               <p class="text-xs text-slate-400">
-                {{ languageService.t('control_tower.table.displaying', { filtered: filteredShipments().length, total: shipments().length }) }}
+                {{ languageService.t('control_tower.table.displaying', { filtered: filteredShipments().length, total: (shipments() || []).length }) }}
               </p>
             </div>
           </div>
@@ -629,12 +629,12 @@ export class CrossBorderDagreLayout extends DagreLayout {
             @if (selectedNode(); as node) {
               <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-300 border border-blue-500/30">
                 <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping"></span>
-                {{ languageService.t('control_tower.table.node_filter', { label: node.label, type: getNodeTypeLabel(node.type) }) }}
+                {{ languageService.t('control_tower.table.node_filter', { label: formatPlaceName(node.label), type: getNodeTypeLabel(node.type) }) }}
               </span>
             } @else if (selectedLink(); as link) {
               <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
                 <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-                {{ languageService.t('control_tower.table.corridor_filter', { label: link.label, mode: link.mode }) }}
+                {{ languageService.t('control_tower.table.corridor_filter', { label: formatCorridorLabel(link.label), mode: formatMode(link.mode) }) }}
               </span>
             } @else {
               <span class="px-2.5 py-1 text-xs text-slate-400 rounded-md bg-slate-800/60 border border-slate-700/50">
@@ -677,16 +677,16 @@ export class CrossBorderDagreLayout extends DagreLayout {
                     {{ shipment.trackingNumber }}
                   </td>
                   <td class="py-3.5 px-4">
-                    <span class="font-medium text-slate-200">{{ shipment.origin }}</span>
+                    <span class="font-medium text-slate-200">{{ formatPlaceName(shipment.origin) }}</span>
                     <span class="text-slate-500 mx-1.5">&rarr;</span>
-                    <span class="font-medium text-slate-200">{{ shipment.destination }}</span>
+                    <span class="font-medium text-slate-200">{{ formatPlaceName(shipment.destination) }}</span>
                   </td>
                   <td class="py-3.5 px-4 text-slate-300 font-medium">
                     {{ shipment.carrierName }}
                   </td>
                   <td class="py-3.5 px-4">
                     <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800 text-slate-200 border border-slate-700">
-                      {{ shipment.currentStage }}
+                      {{ formatPlaceName(shipment.currentStage) }}
                     </span>
                   </td>
                   <td class="py-3.5 px-4 font-mono text-xs text-slate-400">
@@ -704,7 +704,7 @@ export class CrossBorderDagreLayout extends DagreLayout {
                       [ngClass]="getRiskBadgeClass(shipment.delayRisk)"
                       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium">
                       <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getRiskDotClass(shipment.delayRisk)"></span>
-                      {{ shipment.delayRisk }} {{ languageService.t('control_tower.risk') }}
+                      {{ formatRisk(shipment.delayRisk) }}
                     </span>
                   </td>
                 </tr>
@@ -758,6 +758,33 @@ export class ControlTowerComponent implements OnInit {
     }
   }
 
+  formatNodeStatus(status: string): string {
+    const key = `control_tower.node_status.${status}`;
+    const translated = this.languageService.t(key);
+    return translated === key ? status : translated;
+  }
+
+  formatMode(mode?: string): string {
+    if (!mode) return '';
+    const key = `control_tower.mode.${mode}`;
+    const translated = this.languageService.t(key);
+    return translated === key ? mode : translated;
+  }
+
+  formatPlaceName(name: string): string {
+    if (!name) return '';
+    const key = `control_tower.place.${name}`;
+    const translated = this.languageService.t(key);
+    return translated === key ? name : translated;
+  }
+
+  formatCorridorLabel(label: string): string {
+    if (!label) return '';
+    const key = `control_tower.corridor.${label}`;
+    const translated = this.languageService.t(key);
+    return translated === key ? label : translated;
+  }
+
   readonly layoutSettings = {
     orientation: 'LR',
     marginX: 30,
@@ -768,8 +795,8 @@ export class ControlTowerComponent implements OnInit {
   };
 
   readonly kpis = computed<ControlTowerKpis>(() => {
-    const list = this.shipments();
-    const nodeList = this.nodes();
+    const list = Array.isArray(this.shipments()) ? this.shipments() : [];
+    const nodeList = Array.isArray(this.nodes()) ? this.nodes() : [];
     const inTransit = list.filter(
       s => s.status === 'IN_TRANSIT' || s.status === 'OUT_FOR_DELIVERY'
     ).length;
@@ -789,7 +816,7 @@ export class ControlTowerComponent implements OnInit {
   readonly filteredShipments = computed<ShipmentSummary[]>(() => {
     const node = this.selectedNode();
     const link = this.selectedLink();
-    const all = this.shipments();
+    const all = Array.isArray(this.shipments()) ? this.shipments() : [];
 
     if (node) {
       return all.filter(s =>
@@ -831,9 +858,14 @@ export class ControlTowerComponent implements OnInit {
   }
 
   private applyTopologyData(data: TopologyData): void {
-    this.shipments.set(data.shipments);
+    const payload: TopologyData = (data as any)?.data ?? data;
+    const rawShipments = Array.isArray(payload?.shipments) ? payload.shipments : [];
+    const rawNodes = Array.isArray(payload?.nodes) ? payload.nodes : [];
+    const rawLinks = Array.isArray(payload?.links) ? payload.links : [];
 
-    const mappedNodes: Node[] = data.nodes.map(n => ({
+    this.shipments.set(rawShipments);
+
+    const mappedNodes: Node[] = rawNodes.map(n => ({
       id: n.id,
       label: n.label,
       dimension: { width: 170, height: 78 },
@@ -841,7 +873,7 @@ export class ControlTowerComponent implements OnInit {
     }));
     this.nodes.set(mappedNodes);
 
-    const mappedLinks: Edge[] = data.links.map(l => ({
+    const mappedLinks: Edge[] = rawLinks.map(l => ({
       id: l.id,
       source: l.source,
       target: l.target,
@@ -910,7 +942,15 @@ export class ControlTowerComponent implements OnInit {
   }
 
   formatStatus(status: string): string {
-    return status.replace(/_/g, ' ');
+    const key = `control_tower.status.${status}`;
+    const translated = this.languageService.t(key);
+    return translated === key ? status.replace(/_/g, ' ') : translated;
+  }
+
+  formatRisk(risk: 'LOW' | 'MEDIUM' | 'HIGH'): string {
+    const key = `control_tower.risk_badge.${risk}`;
+    const translated = this.languageService.t(key);
+    return translated === key ? `${risk} ${this.languageService.t('control_tower.risk')}` : translated;
   }
 
   getRiskBadgeClass(risk: 'LOW' | 'MEDIUM' | 'HIGH'): string {

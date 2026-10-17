@@ -57,6 +57,35 @@ describe('FreightAuditService', () => {
       expect(result?.disputedStagesCount).toBe(2);
     });
 
+    it('should unwrap NestJS envelope { success, data, timestamp } for getSummary()', () => {
+      const mockSummary: Partial<FreightAuditSummary> = {
+        totalContractedCost: 26650,
+        totalActualCost: 27420,
+        totalVariance: 770,
+        variancePercentage: 2.89,
+        disputedStagesCount: 2,
+        stageBreakdown: [],
+      };
+
+      let result: FreightAuditSummary | undefined;
+      service.getSummary().subscribe((summary) => {
+        result = summary;
+      });
+
+      const req = httpMock.expectOne('/api/freight-audit/summary');
+      req.flush({
+        success: true,
+        data: mockSummary,
+        timestamp: '2026-10-17T00:00:00.000Z',
+      });
+
+      expect(result).toBeDefined();
+      expect(result?.totalContractedCost).toBe(26650);
+      expect(result?.totalActualCost).toBe(27420);
+      expect(result?.totalVariance).toBe(770);
+      expect(result?.disputedStagesCount).toBe(2);
+    });
+
     it('should return fallback summary if HTTP call fails', () => {
       let result: FreightAuditSummary | undefined;
       service.getSummary().subscribe((summary) => {
@@ -103,6 +132,42 @@ describe('FreightAuditService', () => {
 
       expect(result?.length).toBe(1);
       expect(result?.[0].id).toBe('s1');
+    });
+
+    it('should unwrap NestJS envelope { success, data, timestamp } for getShipmentAudit()', () => {
+      const mockStages: FreightStage[] = [
+        {
+          id: 'env-stage-1',
+          shipmentId: 'CP-2026-X9810',
+          stageType: 'ORIGIN_HANDLING',
+          stageOrder: 1,
+          contractedCost: 1200,
+          actualCost: 1250,
+          variance: 50,
+          variancePercent: 4.17,
+          currency: 'USD',
+          status: 'PENDING',
+          auditNotes: 'Envelope stage check',
+        },
+      ];
+
+      let result: FreightStage[] | undefined;
+      service.getShipmentAudit('CP-2026-X9810').subscribe((stages) => {
+        result = stages;
+      });
+
+      const req = httpMock.expectOne(
+        '/api/freight-audit/shipment/CP-2026-X9810'
+      );
+      req.flush({
+        success: true,
+        data: mockStages,
+        timestamp: '2026-10-17T00:00:00.000Z',
+      });
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result?.length).toBe(1);
+      expect(result?.[0].id).toBe('env-stage-1');
     });
 
     it('should return seed fallback stages when API returns error', () => {
@@ -159,6 +224,45 @@ describe('FreightAuditService', () => {
 
       expect(result?.actualCost).toBe(4600);
       expect(result?.variance).toBe(100);
+    });
+
+    it('should unwrap NestJS envelope { success, data, timestamp } for updateStageAudit()', () => {
+      const payload = {
+        actualCost: 4700,
+        auditNotes: 'Updated via envelope',
+        status: 'DISPUTED' as const,
+      };
+
+      const mockStage: FreightStage = {
+        id: 'stage-x9810-2',
+        shipmentId: 'CP-2026-X9810',
+        stageType: 'TRANSIT_1',
+        stageOrder: 2,
+        contractedCost: 4500,
+        actualCost: 4700,
+        variance: 200,
+        variancePercent: 4.44,
+        currency: 'USD',
+        status: 'DISPUTED',
+        auditNotes: 'Updated via envelope',
+      };
+
+      let result: FreightStage | undefined;
+      service
+        .updateStageAudit('stage-x9810-2', payload)
+        .subscribe((updated) => {
+          result = updated;
+        });
+
+      const req = httpMock.expectOne('/api/freight-audit/stage/stage-x9810-2');
+      req.flush({
+        success: true,
+        data: mockStage,
+        timestamp: '2026-10-17T00:00:00.000Z',
+      });
+
+      expect(result).toEqual(mockStage);
+      expect(result?.actualCost).toBe(4700);
     });
 
     it('should calculate local update and apply auto-status on HTTP error', () => {

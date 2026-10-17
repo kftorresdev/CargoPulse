@@ -32,7 +32,7 @@ import { LanguageService, SupportedLanguage } from '@core/services/language.serv
         <div class="inline-flex items-center rounded-full bg-slate-800/80 p-0.5 border border-slate-700 shadow-inner select-none">
           <button
             type="button"
-            (click)="setLanguage('es')"
+            (click)="onLanguageClick('es')"
             class="lang-btn-es px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 focus:outline-none"
             [ngClass]="languageService.currentLang() === 'es' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
             title="Español"
@@ -43,7 +43,7 @@ import { LanguageService, SupportedLanguage } from '@core/services/language.serv
           <span class="text-slate-600 text-xs font-mono px-0.5">|</span>
           <button
             type="button"
-            (click)="setLanguage('en')"
+            (click)="onLanguageClick('en')"
             class="lang-btn-en px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 focus:outline-none"
             [ngClass]="languageService.currentLang() === 'en' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
             title="English"
@@ -151,6 +151,14 @@ export class NavbarComponent {
         return this.languageService.t('roles.guest');
     }
   });
+
+  onLanguageClick(lang: SupportedLanguage): void {
+    if (this.languageService.currentLang() === lang) {
+      this.languageService.toggleLanguage();
+    } else {
+      this.languageService.setLanguage(lang);
+    }
+  }
 
   setLanguage(lang: SupportedLanguage): void {
     this.languageService.setLanguage(lang);
