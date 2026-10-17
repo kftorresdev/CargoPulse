@@ -60,8 +60,8 @@
 ---
 
 ## Sprint 5: Bitácora de 3 Niveles & Centro de Alertas SLA
-- [ ] **5.1** Pantalla **Alert Center**: Tarjetas de KPI (Total, Alta, Media, Baja), contadores de SLA en tiempo real (`DD:HH:MM`), sumatoria de impacto financiero en USD y modal de resolución con justificación requerida.
-- [ ] **5.2** Componente **Bitácora Colaborativa**: Visualización en árbol indentado de 3 niveles (*Nota Principal $\rightarrow$ Réplica $\rightarrow$ Subcomentario*), carga de evidencias y timestampting reactivo.
+- [x] **5.1** Pantalla **Alert Center**: Tarjetas de KPI (Total, Alta, Media, Baja), contadores de SLA en tiempo real (`DD:HH:MM`), sumatoria de impacto financiero en USD y modal de resolución con justificación requerida.
+- [x] **5.2** Componente **Bitácora Colaborativa**: Visualización en árbol indentado de 3 niveles (*Nota Principal $\rightarrow$ Réplica $\rightarrow$ Subcomentario*), carga de evidencias y timestampting reactivo.
 
 ---
 

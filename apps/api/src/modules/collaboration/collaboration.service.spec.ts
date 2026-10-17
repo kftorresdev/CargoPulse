@@ -6,6 +6,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 describe('CollaborationService', () => {
   let service: CollaborationService;
   let prismaMock: {
+    isConnected?: boolean;
     shipment: {
       findUnique: ReturnType<typeof vi.fn>;
     };
@@ -239,6 +240,114 @@ describe('CollaborationService', () => {
           parentId: 'level3-1',
         }),
       ).rejects.toThrow('Maximum discussion thread depth is 3 levels');
+    });
+  });
+
+  describe('Dual-Mode In-Memory Resilience (Offline Fallback)', () => {
+    beforeEach(() => {
+      prismaMock.isConnected = false;
+    });
+
+    it('should return 3-level hierarchical tree for CP-2026-X9810 when DB is offline', async () => {
+      const tree = await service.getNotesTree('CP-2026-X9810');
+
+      expect(tree).toHaveLength(1);
+
+      // Level 1: Root Note
+      const root = tree[0];
+      expect(root.id).toBe('note-1');
+      expect(root.author.role).toBe('ADMIN');
+      expect(root.author.firstName).toBe('Kevin');
+      expect(root.content).toContain('Master B/L released by ocean carrier');
+      expect(root.replies).toHaveLength(1);
+
+      // Level 2: Operator Reply
+      const level2 = root.replies[0];
+      expect(level2.id).toBe('note-2');
+      expect(level2.author.role).toBe('LOGISTICS_OPERATOR');
+      expect(level2.author.firstName).toBe('Carlos');
+      expect(level2.content).toContain('House B/L customs entry submitted');
+      expect(level2.replies).toHaveLength(1);
+
+      // Level 3: Auditor Sub-reply
+      const level3 = level2.replies[0];
+      expect(level3.id).toBe('note-3');
+      expect(level3.author.role).toBe('FREIGHT_AUDITOR');
+      expect(level3.author.firstName).toBe('Elena');
+      expect(level3.content).toContain('Pallet SKU #4892 telemetry confirmed');
+      expect(level3.replies).toHaveLength(0);
+
+      expect(prismaMock.note.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException for non-existent shipment in offline mode', async () => {
+      await expect(
+        service.getNotesTree('invalid-offline-shipment'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should create root note in offline mode', async () => {
+      const note = await service.createNote('CP-2026-X9810', 'user-operator', {
+        content: 'New offline root communication note',
+      });
+
+      expect(note.id).toMatch(/^note-/);
+      expect(note.parentId).toBeNull();
+      expect(note.content).toBe('New offline root communication note');
+      expect(note.author.role).toBe('LOGISTICS_OPERATOR');
+
+      expect(prismaMock.note.create).not.toHaveBeenCalled();
+    });
+
+    it('should allow creating Level 2 note in offline mode', async () => {
+      const level2 = await service.createNote('CP-2026-X9810', 'user-auditor', {
+        content: 'Reply to root note',
+        parentId: 'note-1',
+      });
+
+      expect(level2.parentId).toBe('note-1');
+      expect(level2.author.role).toBe('FREIGHT_AUDITOR');
+    });
+
+    it('should throw BadRequestException when trying to add Level 4 note (exceeding 3-level depth limit) in offline mode', async () => {
+      // note-3 is already at Level 3 (root -> note-2 -> note-3)
+      await expect(
+        service.createNote('CP-2026-X9810', 'user-operator', {
+          content: 'Disallowed fourth level reply',
+          parentId: 'note-3',
+        }),
+      ).rejects.toThrow('Maximum discussion thread depth is 3 levels');
+    });
+
+    it('should throw BadRequestException if parent note does not exist in offline mode', async () => {
+      await expect(
+        service.createNote('CP-2026-X9810', 'user-admin', {
+          content: 'Reply with missing parent',
+          parentId: 'ghost-parent-note',
+        }),
+      ).rejects.toThrow(
+        'Parent note does not exist or does not belong to this shipment',
+      );
+    });
+
+    it('should throw NotFoundException if shipment does not exist when creating note in offline mode', async () => {
+      await expect(
+        service.createNote('non-existent-shipment', 'user-admin', {
+          content: 'Offline test on unknown shipment',
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should fallback to in-memory demo notes when database query throws error', async () => {
+      prismaMock.isConnected = true;
+      prismaMock.shipment.findUnique.mockRejectedValue(
+        new Error('PostgreSQL socket disconnected'),
+      );
+
+      const tree = await service.getNotesTree('CP-2026-X9810');
+
+      expect(tree).toHaveLength(1);
+      expect(tree[0].id).toBe('note-1');
     });
   });
 });

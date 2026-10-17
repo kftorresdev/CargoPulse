@@ -7,6 +7,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 describe('ShipmentsService', () => {
   let service: ShipmentsService;
   let prismaMock: {
+    isConnected?: boolean;
     shipment: {
       create: ReturnType<typeof vi.fn>;
       findMany: ReturnType<typeof vi.fn>;
@@ -186,6 +187,118 @@ describe('ShipmentsService', () => {
           currentStatus: ShipmentStatus.IN_TRANSIT_ORIGIN,
         }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('Dual-Mode In-Memory Resilience (Offline Fallback)', () => {
+    beforeEach(() => {
+      prismaMock.isConnected = false;
+    });
+
+    it('should return paginated shipments with 6 pre-seeded shipments when DB is offline', async () => {
+      const result = await service.findAll({});
+
+      expect(result.items).toHaveLength(6);
+      expect(result.meta.total).toBe(6);
+      expect(result.meta.totalPages).toBe(1);
+
+      const trackingNumbers = result.items.map((i) => i.trackingNumber);
+      expect(trackingNumbers).toContain('CP-2026-X9810');
+      expect(trackingNumbers).toContain('CP-2026-E4421');
+      expect(trackingNumbers).toContain('CP-2026-A1092');
+      expect(trackingNumbers).toContain('CP-MXUS-2026-001');
+      expect(trackingNumbers).toContain('CP-MXUS-2026-002');
+      expect(trackingNumbers).toContain('CP-MXUS-2026-003');
+
+      expect(prismaMock.shipment.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should filter in-memory shipments by status, search, and origin', async () => {
+      const customsHold = await service.findAll({
+        status: ShipmentStatus.CUSTOMS_HOLD,
+      });
+      expect(customsHold.items).toHaveLength(2);
+      expect(
+        customsHold.items.every(
+          (s) => s.currentStatus === ShipmentStatus.CUSTOMS_HOLD,
+        ),
+      ).toBe(true);
+
+      const monterrey = await service.findAll({
+        search: 'Monterrey',
+      });
+      expect(monterrey.items).toHaveLength(2);
+
+      const shanghai = await service.findAll({
+        origin: 'Shanghai',
+      });
+      expect(shanghai.items).toHaveLength(1);
+      expect(shanghai.items[0].trackingNumber).toBe('CP-2026-X9810');
+    });
+
+    it('should find single shipment by id or trackingNumber in offline mode', async () => {
+      const byTracking = await service.findOne('CP-2026-X9810');
+      expect(byTracking.trackingNumber).toBe('CP-2026-X9810');
+      expect(byTracking.carrierName).toBe('OceanBridge Global');
+      expect(byTracking.stages).toHaveLength(5);
+
+      const byId = await service.findOne('shipment-x9810');
+      expect(byId.trackingNumber).toBe('CP-2026-X9810');
+
+      expect(prismaMock.shipment.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException for non-existent shipment in offline mode', async () => {
+      await expect(service.findOne('invalid-unknown-id')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should create a shipment in-memory with default 5 stages in offline mode', async () => {
+      const created = await service.create({
+        origin: 'Tokyo, JP',
+        destination: 'Vancouver, CA',
+        carrierName: 'ONE Line',
+        eta: '2026-11-05T00:00:00.000Z',
+      });
+
+      expect(created.id).toMatch(/^shipment-/);
+      expect(created.trackingNumber).toMatch(/^CP-/);
+      expect(created.stages).toHaveLength(5);
+      expect(created.currentStatus).toBe(ShipmentStatus.DRAFT);
+
+      expect(prismaMock.shipment.create).not.toHaveBeenCalled();
+    });
+
+    it('should update status and actualDelivery in offline mode', async () => {
+      const updated = await service.updateStatus('CP-2026-X9810', {
+        currentStatus: ShipmentStatus.DELIVERED,
+      });
+
+      expect(updated.currentStatus).toBe(ShipmentStatus.DELIVERED);
+      expect(updated.actualDelivery).toBeInstanceOf(Date);
+
+      expect(prismaMock.shipment.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when updating non-existent shipment in offline mode', async () => {
+      await expect(
+        service.updateStatus('non-existent-shipment', {
+          currentStatus: ShipmentStatus.DELIVERED,
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should fallback to in-memory demo shipments when DB throws error', async () => {
+      prismaMock.isConnected = true;
+      prismaMock.shipment.count.mockRejectedValue(
+        new Error('PostgreSQL socket disconnected'),
+      );
+
+      const result = await service.findAll({});
+
+      expect(result.items.length).toBeGreaterThanOrEqual(6);
+      expect(result.items[0].trackingNumber).toBeDefined();
     });
   });
 });

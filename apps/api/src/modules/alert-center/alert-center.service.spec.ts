@@ -7,6 +7,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 describe('AlertCenterService', () => {
   let service: AlertCenterService;
   let prismaMock: {
+    isConnected?: boolean;
     alert: {
       findMany: ReturnType<typeof vi.fn>;
       findUnique: ReturnType<typeof vi.fn>;
@@ -262,6 +263,119 @@ describe('AlertCenterService', () => {
           resolutionNotes: 'Valid notes over 10 chars',
         }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('Dual-Mode In-Memory Resilience (Offline Fallback)', () => {
+    beforeEach(() => {
+      prismaMock.isConnected = false;
+    });
+
+    it('should return all 4 pre-seeded demo alerts with dynamic SLA remaining when DB is offline', async () => {
+      const results = await service.findAll({});
+
+      expect(results).toHaveLength(4);
+      expect(results.map((r) => r.id)).toEqual([
+        'alert-1',
+        'alert-2',
+        'alert-3',
+        'alert-4',
+      ]);
+      expect(results[0].title).toContain('Vessel Berth Delay');
+      expect(results[0].severity).toBe(AlertSeverity.CRITICAL);
+      expect(results[0].status).toBe(AlertStatus.OPEN);
+      expect(results[0].slaRemaining).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+      expect(results[3].status).toBe(AlertStatus.RESOLVED);
+      expect(results[3].slaRemaining).toBe('BREACHED');
+
+      expect(prismaMock.alert.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should filter in-memory alerts by status and severity', async () => {
+      const openAlerts = await service.findAll({ status: AlertStatus.OPEN });
+      expect(openAlerts).toHaveLength(2);
+      expect(openAlerts.every((a) => a.status === AlertStatus.OPEN)).toBe(true);
+
+      const criticalAlerts = await service.findAll({
+        severity: AlertSeverity.CRITICAL,
+      });
+      expect(criticalAlerts).toHaveLength(1);
+      expect(criticalAlerts[0].id).toBe('alert-1');
+      expect(criticalAlerts[0].severity).toBe(AlertSeverity.CRITICAL);
+    });
+
+    it('should compute aggregated KPIs from in-memory alerts when DB is offline', async () => {
+      const kpis = await service.getKpis();
+
+      expect(kpis.totalAlerts).toBe(4);
+      expect(kpis.criticalCount).toBe(1);
+      expect(kpis.highCount).toBe(1);
+      expect(kpis.mediumCount).toBe(1);
+      expect(kpis.lowCount).toBe(1);
+      expect(kpis.openCount).toBe(2);
+      expect(kpis.resolvedCount).toBe(1);
+      // OPEN ($45000 + $18500) + IN_PROGRESS ($6200) = $69700
+      expect(kpis.totalFinancialImpactUsd).toBe(69700);
+      // Alert 4 was resolved 1h ago while deadline was 1d ago -> Breached (1)
+      expect(kpis.slaBreachedCount).toBe(1);
+
+      expect(prismaMock.alert.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should create an alert in-memory in offline mode', async () => {
+      const deadline = new Date(Date.now() + 3600000).toISOString();
+      const created = await service.createAlert({
+        shipmentId: 'CP-2026-X9810',
+        title: 'Customs Secondary Inspection',
+        description: 'Physical container inspection required',
+        severity: AlertSeverity.HIGH,
+        slaDeadline: deadline,
+        financialImpactUsd: 1250,
+      });
+
+      expect(created.id).toMatch(/^alert-/);
+      expect(created.shipmentTracking).toBe('CP-2026-X9810');
+      expect(created.carrier).toBe('OceanBridge Global');
+      expect(created.status).toBe(AlertStatus.OPEN);
+      expect(created.financialImpactUsd).toBe(1250);
+      expect(created.slaRemaining).not.toBe('BREACHED');
+
+      expect(prismaMock.alert.create).not.toHaveBeenCalled();
+    });
+
+    it('should resolve an in-memory alert in offline mode', async () => {
+      const result = await service.resolveAlert('alert-1', {
+        resolutionNotes: 'Berth re-assigned, container power reconnected safely.',
+      });
+
+      expect(result.id).toBe('alert-1');
+      expect(result.status).toBe(AlertStatus.RESOLVED);
+      expect(result.resolvedAt).toBeInstanceOf(Date);
+      expect(result.resolutionNotes).toBe(
+        'Berth re-assigned, container power reconnected safely.',
+      );
+
+      expect(prismaMock.alert.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when resolving a non-existent alert in offline mode', async () => {
+      await expect(
+        service.resolveAlert('non-existent-offline-alert', {
+          resolutionNotes: 'Valid notes over 10 chars',
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should fallback to in-memory demo alerts when database query throws error', async () => {
+      prismaMock.isConnected = true;
+      prismaMock.alert.findMany.mockRejectedValue(
+        new Error('PostgreSQL socket closed unexpectedly'),
+      );
+
+      const results = await service.findAll({});
+
+      expect(results).toHaveLength(4);
+      expect(results[0].title).toBeDefined();
     });
   });
 });
