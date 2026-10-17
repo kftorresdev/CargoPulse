@@ -3,7 +3,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
   MinLength,
 } from 'class-validator';
 
@@ -19,11 +18,11 @@ export class CreateNoteDto {
   content!: string;
 
   @ApiPropertyOptional({
-    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-    description: 'Parent note UUID for threaded discussions (optional)',
+    example: 'note-1792207398579',
+    description: 'Parent note ID for threaded discussions (optional)',
   })
   @IsOptional()
-  @IsUUID('all', { message: 'parentId must be a valid UUID' })
+  @IsString({ message: 'parentId must be a string' })
   parentId?: string;
 
   @ApiPropertyOptional({

@@ -3,8 +3,10 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { ShipmentsService } from '../shipments/shipments.service.js';
 import { CreateNoteDto } from './dto/index.js';
 
 export interface NoteAuthorSummary {
@@ -77,12 +79,33 @@ export class CollaborationService {
     'CP-2026-A1092',
     'shipment-a1092',
     'CP-MXUS-2026-001',
+    'shipment-mxus-001',
     'CP-MXUS-2026-002',
+    'shipment-mxus-002',
     'CP-MXUS-2026-003',
+    'shipment-mxus-003',
     'ship-1',
   ]);
 
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly shipmentAliases: Record<string, string> = {
+    'shipment-x9810': 'CP-2026-X9810',
+    'CP-2026-X9810': 'shipment-x9810',
+    'shipment-e4421': 'CP-2026-E4421',
+    'CP-2026-E4421': 'shipment-e4421',
+    'shipment-a1092': 'CP-2026-A1092',
+    'CP-2026-A1092': 'shipment-a1092',
+    'shipment-mxus-001': 'CP-MXUS-2026-001',
+    'CP-MXUS-2026-001': 'shipment-mxus-001',
+    'shipment-mxus-002': 'CP-MXUS-2026-002',
+    'CP-MXUS-2026-002': 'shipment-mxus-002',
+    'shipment-mxus-003': 'CP-MXUS-2026-003',
+    'CP-MXUS-2026-003': 'shipment-mxus-003',
+  };
+
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly shipmentsService?: ShipmentsService,
+  ) {}
 
   private get isDbAvailable(): boolean {
     return this.prisma?.isConnected !== false;
@@ -232,17 +255,14 @@ export class CollaborationService {
       }
     }
 
-    const normalized =
-      shipmentId === 'shipment-x9810' ? 'CP-2026-X9810' : shipmentId;
-    if (
-      !this.validOfflineShipments.has(shipmentId) &&
-      !this.validOfflineShipments.has(normalized)
-    ) {
+    const exists = await this.checkShipmentExists(shipmentId);
+    if (!exists) {
       throw new NotFoundException(`Shipment with ID "${shipmentId}" not found`);
     }
 
-    const shipmentNotes = this.demoNotes.filter(
-      (n) => n.shipmentId === shipmentId || n.shipmentId === normalized,
+    const identifiers = await this.getShipmentIdentifiers(shipmentId);
+    const shipmentNotes = this.demoNotes.filter((n) =>
+      identifiers.has(n.shipmentId),
     );
 
     return this.buildTree(shipmentNotes);
@@ -327,22 +347,17 @@ export class CollaborationService {
       }
     }
 
-    const normalized =
-      shipmentId === 'shipment-x9810' ? 'CP-2026-X9810' : shipmentId;
-    if (
-      !this.validOfflineShipments.has(shipmentId) &&
-      !this.validOfflineShipments.has(normalized)
-    ) {
+    const exists = await this.checkShipmentExists(shipmentId);
+    if (!exists) {
       throw new NotFoundException(`Shipment with ID "${shipmentId}" not found`);
     }
+
+    const identifiers = await this.getShipmentIdentifiers(shipmentId);
 
     if (dto.parentId) {
       const parent = this.demoNotes.find((n) => n.id === dto.parentId);
 
-      if (
-        !parent ||
-        (parent.shipmentId !== shipmentId && parent.shipmentId !== normalized)
-      ) {
+      if (!parent || !identifiers.has(parent.shipmentId)) {
         throw new BadRequestException(
           'Parent note does not exist or does not belong to this shipment',
         );
@@ -375,6 +390,74 @@ export class CollaborationService {
 
     this.demoNotes.push(newNote);
     return newNote;
+  }
+
+  private async checkShipmentExists(shipmentId: string): Promise<boolean> {
+    const alias = this.shipmentAliases[shipmentId];
+    if (
+      this.validOfflineShipments.has(shipmentId) ||
+      (alias && this.validOfflineShipments.has(alias))
+    ) {
+      return true;
+    }
+
+    if (this.shipmentsService) {
+      try {
+        const found = await this.shipmentsService.findOne(shipmentId);
+        if (found) {
+          return true;
+        }
+      } catch {
+        // Fall back to findAll query
+      }
+
+      try {
+        const allShipments = await this.shipmentsService.findAll({ limit: 100 } as any);
+        const matches = allShipments?.items?.some(
+          (s) => s.id === shipmentId || s.trackingNumber === shipmentId,
+        );
+        if (matches) {
+          return true;
+        }
+      } catch {
+        // Ignored
+      }
+    }
+
+    return false;
+  }
+
+  private async getShipmentIdentifiers(shipmentId: string): Promise<Set<string>> {
+    const ids = new Set<string>([shipmentId]);
+    const alias = this.shipmentAliases[shipmentId];
+    if (alias) {
+      ids.add(alias);
+    }
+
+    if (this.shipmentsService) {
+      try {
+        const found = await this.shipmentsService.findOne(shipmentId);
+        if (found) {
+          if (found.id) ids.add(found.id);
+          if (found.trackingNumber) ids.add(found.trackingNumber);
+        }
+      } catch {
+        try {
+          const all = await this.shipmentsService.findAll({ limit: 100 } as any);
+          const found = all?.items?.find(
+            (s) => s.id === shipmentId || s.trackingNumber === shipmentId,
+          );
+          if (found) {
+            if (found.id) ids.add(found.id);
+            if (found.trackingNumber) ids.add(found.trackingNumber);
+          }
+        } catch {
+          // Ignored
+        }
+      }
+    }
+
+    return ids;
   }
 }
 

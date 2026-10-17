@@ -338,6 +338,83 @@ describe('CollaborationService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
+    it('should return empty tree [] for shipment-mxus-002 when it has no notes yet in offline mode', async () => {
+      const tree = await service.getNotesTree('shipment-mxus-002');
+      expect(tree).toEqual([]);
+    });
+
+    it('should create a note on shipment-mxus-002 and retrieve it via getNotesTree in offline mode', async () => {
+      const createdNote = await service.createNote('shipment-mxus-002', 'user-operator', {
+        content: 'Cross-border transport manifest inspected at Laredo',
+      });
+
+      expect(createdNote.id).toMatch(/^note-/);
+      expect(createdNote.shipmentId).toBe('shipment-mxus-002');
+      expect(createdNote.content).toBe('Cross-border transport manifest inspected at Laredo');
+
+      const tree = await service.getNotesTree('shipment-mxus-002');
+      expect(tree).toHaveLength(1);
+      expect(tree[0].id).toBe(createdNote.id);
+      expect(tree[0].content).toBe('Cross-border transport manifest inspected at Laredo');
+      expect(tree[0].replies).toHaveLength(0);
+    });
+
+    it('should allow replying to a valid parent note on shipment-mxus-002 in offline mode', async () => {
+      const rootNote = await service.createNote('shipment-mxus-002', 'user-operator', {
+        content: 'Customs release order pending approval',
+      });
+
+      const replyNote = await service.createNote('shipment-mxus-002', 'user-auditor', {
+        content: 'Inspection stamp verified and confirmed',
+        parentId: rootNote.id,
+      });
+
+      expect(replyNote.parentId).toBe(rootNote.id);
+
+      const tree = await service.getNotesTree('shipment-mxus-002');
+      const rootInTree = tree.find((n) => n.id === rootNote.id);
+      expect(rootInTree).toBeDefined();
+      expect(rootInTree!.replies).toHaveLength(1);
+      expect(rootInTree!.replies[0].id).toBe(replyNote.id);
+      expect(rootInTree!.replies[0].content).toBe('Inspection stamp verified and confirmed');
+    });
+
+    it('should support dynamically created shipments via ShipmentsService in offline mode', async () => {
+      const shipmentsServiceMock = {
+        findOne: vi.fn().mockImplementation(async (id: string) => {
+          if (id === 'shipment-dyn-999') {
+            return {
+              id: 'shipment-dyn-999',
+              trackingNumber: 'CP-DYN-999',
+            };
+          }
+          throw new NotFoundException(`Shipment ${id} not found`);
+        }),
+        findAll: vi.fn().mockResolvedValue({
+          items: [
+            { id: 'shipment-dyn-999', trackingNumber: 'CP-DYN-999' },
+          ],
+        }),
+      };
+
+      const customService = new CollaborationService(
+        prismaMock as unknown as PrismaService,
+        shipmentsServiceMock as unknown as any,
+      );
+
+      const tree = await customService.getNotesTree('shipment-dyn-999');
+      expect(tree).toEqual([]);
+
+      const note = await customService.createNote('shipment-dyn-999', 'user-operator', {
+        content: 'Dynamic shipment note',
+      });
+      expect(note.id).toMatch(/^note-/);
+
+      const updatedTree = await customService.getNotesTree('shipment-dyn-999');
+      expect(updatedTree).toHaveLength(1);
+      expect(updatedTree[0].content).toBe('Dynamic shipment note');
+    });
+
     it('should fallback to in-memory demo notes when database query throws error', async () => {
       prismaMock.isConnected = true;
       prismaMock.shipment.findUnique.mockRejectedValue(

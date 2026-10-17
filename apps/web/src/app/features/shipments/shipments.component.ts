@@ -351,11 +351,18 @@ import {
             class="flex items-start justify-between border-b border-slate-800 pb-3"
           >
             <div>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
                 <span
                   class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"
                 >
                   {{ selectedShipment()?.trackingNumber }}
+                </span>
+                <span
+                  *ngIf="selectedShipment()?.carrierName"
+                  data-testid="drawer-carrier-name"
+                  class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700"
+                >
+                  {{ selectedShipment()?.carrierName }}
                 </span>
                 <h3 class="text-sm font-semibold text-slate-100">
                   {{ languageService.t('shipments.tree.title') }}
@@ -415,7 +422,7 @@ import {
             </button>
 
             <span class="text-[11px] text-slate-400">
-              {{ notesTree().length }} threads
+              {{ notesTree().length }} {{ languageService.currentLang() === 'es' ? 'hilos' : 'threads' }}
             </span>
           </div>
 
@@ -482,7 +489,7 @@ import {
 
           <!-- Loading state -->
           <div *ngIf="isLoadingNotes()" class="py-6 text-center text-xs text-slate-400">
-            Loading bitácora tree...
+            {{ languageService.currentLang() === 'es' ? 'Cargando bitácora...' : 'Loading bitácora tree...' }}
           </div>
 
           <!-- Threaded Notes Tree View -->
@@ -493,9 +500,38 @@ import {
             <!-- Empty state -->
             <div
               *ngIf="notesTree().length === 0"
-              class="p-6 text-center text-xs text-slate-500 bg-slate-950/40 rounded-xl border border-slate-800/60"
+              data-testid="empty-notes-card"
+              class="p-8 text-center bg-slate-950/40 rounded-xl border border-slate-800/60 flex flex-col items-center justify-center space-y-3"
             >
-              {{ languageService.t('shipments.tree.empty') }}
+              <div class="w-12 h-12 rounded-full bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400">
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </div>
+              <p class="text-sm font-medium text-slate-300">
+                {{
+                  languageService.currentLang() === 'es'
+                    ? 'No hay notas registradas en esta bitácora para este envío'
+                    : 'No notes recorded in the bitácora for this shipment yet'
+                }}
+              </p>
+              <p class="text-xs text-slate-400 max-w-sm">
+                {{
+                  languageService.currentLang() === 'es'
+                    ? 'Sé el primero en iniciar un hilo de comunicación para coordinar este envío.'
+                    : 'Be the first to start a communication thread to coordinate this shipment.'
+                }}
+              </p>
             </div>
 
             <!-- Root Notes (Level 1) -->
@@ -536,7 +572,7 @@ import {
                 <!-- Actions for Level 1 -->
                 <div class="flex items-center justify-between pt-1 border-t border-slate-800/60">
                   <span class="text-[10px] text-slate-500">
-                    {{ l1.replies.length }} replies
+                    {{ l1.replies.length }} {{ languageService.currentLang() === 'es' ? 'respuestas' : 'replies' }}
                   </span>
                   <button
                     type="button"
@@ -600,7 +636,7 @@ import {
                   <!-- Actions for Level 2 -->
                   <div class="flex items-center justify-between pt-1 border-t border-slate-800/60">
                     <span class="text-[10px] text-slate-500">
-                      {{ l2.replies.length }} replies
+                      {{ l2.replies.length }} {{ languageService.currentLang() === 'es' ? 'respuestas' : 'replies' }}
                     </span>
                     <button
                       type="button"
@@ -1048,6 +1084,9 @@ export class ShipmentsComponent implements OnInit {
         next: () => {
           this.cancelNote();
           this.loadNotesTree(shipment.id);
+        },
+        error: (err) => {
+          console.error('Failed to create note:', err);
         },
       });
   }

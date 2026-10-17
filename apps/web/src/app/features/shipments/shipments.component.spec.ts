@@ -243,6 +243,86 @@ describe('ShipmentsComponent', () => {
       expect(panel).toBeTruthy();
     });
 
+    it('should display drawer header with tracking badge, carrier name, and route', () => {
+      const targetShipment = mockShipments[0];
+      component.openNotesTree(targetShipment);
+      fixture.detectChanges();
+
+      const panel = fixture.nativeElement.querySelector(
+        '[data-testid="notes-tree-panel"]'
+      );
+      expect(panel.textContent).toContain(targetShipment.trackingNumber);
+      expect(panel.textContent).toContain(targetShipment.carrierName);
+      expect(panel.textContent).toContain(targetShipment.origin);
+      expect(panel.textContent).toContain(targetShipment.destination);
+    });
+
+    it('should display friendly bilingual empty state card when notesTree is empty', () => {
+      vi.spyOn(shipmentsService, 'getNotesTree').mockReturnValue(of([]));
+      languageService.setLanguage('es');
+
+      component.openNotesTree(mockShipments[1]);
+      fixture.detectChanges();
+
+      expect(component.notesTree().length).toBe(0);
+      const emptyCard = fixture.nativeElement.querySelector(
+        '[data-testid="empty-notes-card"]'
+      );
+      expect(emptyCard).toBeTruthy();
+      expect(emptyCard.textContent).toContain(
+        'No hay notas registradas en esta bitácora para este envío'
+      );
+      expect(emptyCard.textContent).toContain(
+        'Sé el primero en iniciar un hilo de comunicación para coordinar este envío.'
+      );
+
+      // Switch to English
+      languageService.setLanguage('en');
+      fixture.detectChanges();
+
+      expect(emptyCard.textContent).toContain(
+        'No notes recorded in the bitácora for this shipment yet'
+      );
+      expect(emptyCard.textContent).toContain(
+        'Be the first to start a communication thread to coordinate this shipment.'
+      );
+    });
+
+    it('should render bilingual thread and reply counts', () => {
+      languageService.setLanguage('es');
+      component.openNotesTree(mockShipments[0]);
+      fixture.detectChanges();
+
+      const panel = fixture.nativeElement.querySelector(
+        '[data-testid="notes-tree-panel"]'
+      );
+      expect(panel.textContent).toContain('1 hilos');
+      expect(panel.textContent).toContain('1 respuestas');
+
+      languageService.setLanguage('en');
+      fixture.detectChanges();
+
+      expect(panel.textContent).toContain('1 threads');
+      expect(panel.textContent).toContain('1 replies');
+    });
+
+    it('should render bilingual loading bitácora text', () => {
+      languageService.setLanguage('es');
+      component.openNotesTree(mockShipments[0]);
+      component.isLoadingNotes.set(true);
+      fixture.detectChanges();
+
+      const panel = fixture.nativeElement.querySelector(
+        '[data-testid="notes-tree-panel"]'
+      );
+      expect(panel.textContent).toContain('Cargando bitácora...');
+
+      languageService.setLanguage('en');
+      fixture.detectChanges();
+
+      expect(panel.textContent).toContain('Loading bitácora tree...');
+    });
+
     it('should render Level 1 (Master B/L), Level 2 (House B/L), and Level 3 (SKU Item)', () => {
       component.openNotesTree(mockShipments[0]);
       fixture.detectChanges();

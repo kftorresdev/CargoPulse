@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import {
   CreateNotePayload,
@@ -195,8 +195,8 @@ export class ShipmentsService {
       .pipe(
         map((res) => {
           const payload = res?.data ?? res;
-          if (Array.isArray(payload) && payload.length > 0) {
-            this.demoTreesByShipment[shipmentId] = payload;
+          if (Array.isArray(payload)) {
+            this.demoTreesByShipment[shipmentId] = payload as NoteTreeNode[];
             return payload as NoteTreeNode[];
           }
           return this.getFallbackTree(shipmentId);
@@ -218,28 +218,7 @@ export class ShipmentsService {
           this.insertNoteIntoInMemoryTree(shipmentId, created);
           return created;
         }),
-        catchError(() => {
-          const fallbackNote: NoteTreeNode = {
-            id: `note-${Date.now()}`,
-            shipmentId,
-            authorId: 'user-demo-ops',
-            author: {
-              id: 'user-demo-ops',
-              firstName: 'Carlos',
-              lastName: 'Mendez',
-              email: 'carlos.mendez@cargopulse.io',
-              role: 'OPERATIONS_COORDINATOR',
-            },
-            parentId: payload.parentId ?? null,
-            content: payload.content,
-            attachmentUrl: payload.attachmentUrl ?? null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            replies: [],
-          };
-          this.insertNoteIntoInMemoryTree(shipmentId, fallbackNote);
-          return of(fallbackNote);
-        })
+        catchError((err) => throwError(() => err))
       );
   }
 
@@ -299,17 +278,18 @@ export class ShipmentsService {
   }
 
   private getFallbackTree(shipmentId: string): NoteTreeNode[] {
-    if (!this.demoTreesByShipment[shipmentId]) {
-      this.demoTreesByShipment[shipmentId] = this.createDefaultTreeForShipment(shipmentId);
-    }
-    return JSON.parse(JSON.stringify(this.demoTreesByShipment[shipmentId]));
+    const tree = this.demoTreesByShipment[shipmentId] ?? [];
+    return JSON.parse(JSON.stringify(tree));
   }
 
   private insertNoteIntoInMemoryTree(
     shipmentId: string,
     createdNote: any
   ): void {
-    const tree = this.demoTreesByShipment[shipmentId] || this.createDefaultTreeForShipment(shipmentId);
+    if (!this.demoTreesByShipment[shipmentId]) {
+      this.demoTreesByShipment[shipmentId] = [];
+    }
+    const tree = this.demoTreesByShipment[shipmentId];
     const node: NoteTreeNode = {
       id: createdNote.id || `note-${Date.now()}`,
       shipmentId,
@@ -359,18 +339,10 @@ export class ShipmentsService {
   }
 
   private seedDefaultTrees(): void {
-    for (const shipment of this.demoShipments) {
-      this.demoTreesByShipment[shipment.id] = this.createDefaultTreeForShipment(
-        shipment.id
-      );
-    }
-  }
-
-  private createDefaultTreeForShipment(shipmentId: string): NoteTreeNode[] {
-    return [
+    const oceanNotes: NoteTreeNode[] = [
       {
-        id: `note-l1-${shipmentId}-1`,
-        shipmentId,
+        id: 'note-l1-shipment-x9810-1',
+        shipmentId: 'shipment-x9810',
         authorId: 'usr-ops-01',
         author: {
           id: 'usr-ops-01',
@@ -387,8 +359,8 @@ export class ShipmentsService {
         updatedAt: '2026-10-16T08:30:00.000Z',
         replies: [
           {
-            id: `note-l2-${shipmentId}-1`,
-            shipmentId,
+            id: 'note-l2-shipment-x9810-1',
+            shipmentId: 'shipment-x9810',
             authorId: 'usr-fwd-01',
             author: {
               id: 'usr-fwd-01',
@@ -397,7 +369,7 @@ export class ShipmentsService {
               email: 'marcus.chen@cargopulse.io',
               role: 'FREIGHT_FORWARDER',
             },
-            parentId: `note-l1-${shipmentId}-1`,
+            parentId: 'note-l1-shipment-x9810-1',
             content:
               'House B/L #HBL-99201 customs clearance pre-advisement lodged with US CBP. Drayage appointment rebooked for terminal Pier 400.',
             attachmentUrl: null,
@@ -405,8 +377,8 @@ export class ShipmentsService {
             updatedAt: '2026-10-16T11:15:00.000Z',
             replies: [
               {
-                id: `note-l3-${shipmentId}-1`,
-                shipmentId,
+                id: 'note-l3-shipment-x9810-1',
+                shipmentId: 'shipment-x9810',
                 authorId: 'usr-qa-01',
                 author: {
                   id: 'usr-qa-01',
@@ -415,7 +387,7 @@ export class ShipmentsService {
                   email: 'sofia.reyes@cargopulse.io',
                   role: 'QUALITY_INSPECTOR',
                 },
-                parentId: `note-l2-${shipmentId}-1`,
+                parentId: 'note-l2-shipment-x9810-1',
                 content:
                   'SKU #BIO-9021 (Temperature-Controlled Pharma): IoT Telemetry tag #TH-882 confirms +4.2°C nominal range during anchorage wait. Battery at 96%.',
                 attachmentUrl: null,
@@ -428,8 +400,8 @@ export class ShipmentsService {
         ],
       },
       {
-        id: `note-l1-${shipmentId}-2`,
-        shipmentId,
+        id: 'note-l1-shipment-x9810-2',
+        shipmentId: 'shipment-x9810',
         authorId: 'usr-disp-02',
         author: {
           id: 'usr-disp-02',
@@ -447,5 +419,32 @@ export class ShipmentsService {
         replies: [],
       },
     ];
+
+    this.demoTreesByShipment = {};
+
+    // ONLY seed demo notes for the demo shipment that actually has them:
+    // shipment-x9810 / CP-2026-X9810
+    this.demoTreesByShipment['shipment-x9810'] = JSON.parse(JSON.stringify(oceanNotes));
+    this.demoTreesByShipment['CP-2026-X9810'] = this.demoTreesByShipment['shipment-x9810'];
+
+    // For ALL other shipments, initialize their fallback tree as [] (empty array)
+    for (const shipment of this.demoShipments) {
+      if (shipment.id !== 'shipment-x9810') {
+        this.demoTreesByShipment[shipment.id] = [];
+        this.demoTreesByShipment[shipment.trackingNumber] = [];
+      }
+    }
+
+    const defaultEmptyShipments = [
+      'shipment-mxus-001',
+      'shipment-mxus-002',
+      'shipment-e4421',
+      'shipment-a1092',
+    ];
+    for (const id of defaultEmptyShipments) {
+      if (!this.demoTreesByShipment[id]) {
+        this.demoTreesByShipment[id] = [];
+      }
+    }
   }
 }

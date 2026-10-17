@@ -225,7 +225,7 @@ describe('ShipmentsService', () => {
       expect(result).toEqual(mockTree);
     });
 
-    it('should provide fallback 3-level tree containing Master B/L, House B/L, and SKU Item when API fails', () => {
+    it('should provide fallback 3-level tree containing Master B/L, House B/L, and SKU Item when API fails for shipment-x9810', () => {
       let result: NoteTreeNode[] | undefined;
       service.getNotesTree('shipment-x9810').subscribe((tree) => {
         result = tree;
@@ -253,72 +253,152 @@ describe('ShipmentsService', () => {
       expect(level3Note.replies.length).toBe(0); // Max depth strictly enforced
     });
 
-    it('should post note to /api/collaboration/shipment/:id/notes and update in-memory tree', () => {
-      const payload: CreateNotePayload = {
-        content: 'New Operational Directive',
-        parentId: null,
-      };
-
-      let result: any;
-      service.createNote('shipment-x9810', payload).subscribe((res) => {
-        result = res;
+    it('should maintain isolated notes tree per shipment and return empty tree [] for shipment without notes', () => {
+      let mxusTree: NoteTreeNode[] | undefined;
+      service.getNotesTree('shipment-mxus-002').subscribe((tree) => {
+        mxusTree = tree;
       });
+      const req = httpMock.expectOne('/api/collaboration/shipment/shipment-mxus-002/tree');
+      req.flush({ data: [] });
 
-      const req = httpMock.expectOne('/api/collaboration/shipment/shipment-x9810/notes');
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(payload);
+      expect(mxusTree).toEqual([]);
 
-      const createdResponse = {
-        id: 'new-root-note',
-        shipmentId: 'shipment-x9810',
-        authorId: 'user-ops',
+      // shipment-x9810 still has its own 3-level demo notes
+      let x9810Tree: NoteTreeNode[] | undefined;
+      service.getNotesTree('shipment-x9810').subscribe((tree) => {
+        x9810Tree = tree;
+      });
+      const req2 = httpMock.expectOne('/api/collaboration/shipment/shipment-x9810/tree');
+      req2.flush('Offline', { status: 503, statusText: 'Offline' });
+
+      expect(x9810Tree).toBeDefined();
+      expect(x9810Tree!.length).toBeGreaterThan(0);
+      expect(x9810Tree![0].content).toContain('MSC OSCAR');
+    });
+
+    it('should return empty tree [] when API returns empty array or fails for a shipment with no notes', () => {
+      let result: NoteTreeNode[] | undefined;
+      service.getNotesTree('shipment-mxus-001').subscribe((tree) => {
+        result = tree;
+      });
+      const req = httpMock.expectOne('/api/collaboration/shipment/shipment-mxus-001/tree');
+      req.flush('Error', { status: 500, statusText: 'Error' });
+
+      expect(result).toEqual([]);
+    });
+
+    it('adding a note to shipment-mxus-002 does NOT add it to shipment-x9810', () => {
+      const newNote = {
+        id: 'note-mxus-1',
+        shipmentId: 'shipment-mxus-002',
+        authorId: 'usr-ops',
         author: {
-          id: 'user-ops',
-          firstName: 'Elena',
-          lastName: 'Vargas',
-          email: 'elena@cargopulse.io',
-          role: 'CARRIER_OPS',
+          id: 'usr-ops',
+          firstName: 'Carlos',
+          lastName: 'Mendez',
+          email: 'carlos@cargopulse.io',
+          role: 'OPERATIONS_COORDINATOR',
         },
         parentId: null,
-        content: payload.content,
+        content: 'Customs cleared at Nuevo Laredo',
         attachmentUrl: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         replies: [],
       };
-      req.flush({ data: createdResponse });
 
-      expect(result).toEqual(createdResponse);
+      service.createNote('shipment-mxus-002', { content: 'Customs cleared at Nuevo Laredo', parentId: null }).subscribe();
+      const req = httpMock.expectOne('/api/collaboration/shipment/shipment-mxus-002/notes');
+      req.flush({ data: newNote });
+
+      // Verify shipment-mxus-002 has it
+      let mxusTree: NoteTreeNode[] = [];
+      service.getNotesTree('shipment-mxus-002').subscribe((t) => (mxusTree = t));
+      httpMock.expectOne('/api/collaboration/shipment/shipment-mxus-002/tree').flush('Offline', { status: 503, statusText: 'Offline' });
+      expect(mxusTree.length).toBe(1);
+      expect(mxusTree[0].content).toBe('Customs cleared at Nuevo Laredo');
+
+      // Verify shipment-x9810 does NOT have it
+      let x9810Tree: NoteTreeNode[] = [];
+      service.getNotesTree('shipment-x9810').subscribe((t) => (x9810Tree = t));
+      httpMock.expectOne('/api/collaboration/shipment/shipment-x9810/tree').flush('Offline', { status: 503, statusText: 'Offline' });
+      expect(x9810Tree.some((n) => n.content === 'Customs cleared at Nuevo Laredo')).toBe(false);
     });
 
-    it('should fallback and insert reply note into in-memory tree when API fails', () => {
-      // First get tree to initialize fallback data
-      let currentTree: NoteTreeNode[] = [];
-      service.getNotesTree('shipment-x9810').subscribe((tree) => {
-        currentTree = tree;
-      });
-      httpMock
-        .expectOne('/api/collaboration/shipment/shipment-x9810/tree')
-        .flush('Offline', { status: 503, statusText: 'Offline' });
+    it('replying to Level 1 and Level 2 notes works within the same shipment tree', () => {
+      let tree: NoteTreeNode[] = [];
+      service.getNotesTree('shipment-x9810').subscribe((t) => (tree = t));
+      httpMock.expectOne('/api/collaboration/shipment/shipment-x9810/tree').flush('Offline', { status: 503, statusText: 'Offline' });
 
-      const targetParentId = currentTree[0].id;
-      const replyPayload: CreateNotePayload = {
-        content: 'Replying to Level 1 Master B/L',
-        parentId: targetParentId,
+      const l1 = tree[0];
+      const l1Id = l1.id;
+      const initialL1RepliesCount = l1.replies.length;
+
+      // Reply to Level 1
+      const createdL2 = {
+        id: 'new-l2-reply',
+        shipmentId: 'shipment-x9810',
+        authorId: 'usr-ops',
+        author: { id: 'usr-ops', firstName: 'Elena', lastName: 'Vargas', email: 'elena@cargopulse.io', role: 'CARRIER_OPS' },
+        parentId: l1Id,
+        content: 'New reply to Level 1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        replies: [],
       };
 
-      let replyResult: any;
-      service.createNote('shipment-x9810', replyPayload).subscribe((res) => {
-        replyResult = res;
+      service.createNote('shipment-x9810', { content: 'New reply to Level 1', parentId: l1Id }).subscribe();
+      httpMock.expectOne('/api/collaboration/shipment/shipment-x9810/notes').flush({ data: createdL2 });
+
+      // Check Level 1 now has new reply
+      service.getNotesTree('shipment-x9810').subscribe((t) => (tree = t));
+      httpMock.expectOne('/api/collaboration/shipment/shipment-x9810/tree').flush('Offline', { status: 503, statusText: 'Offline' });
+      const updatedL1 = tree.find((n) => n.id === l1Id)!;
+      expect(updatedL1.replies.length).toBe(initialL1RepliesCount + 1);
+
+      // Reply to Level 2
+      const createdL3 = {
+        id: 'new-l3-reply',
+        shipmentId: 'shipment-x9810',
+        authorId: 'usr-qa',
+        author: { id: 'usr-qa', firstName: 'Sofia', lastName: 'Reyes', email: 'sofia@cargopulse.io', role: 'QUALITY_INSPECTOR' },
+        parentId: 'new-l2-reply',
+        content: 'New reply to Level 2',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        replies: [],
+      };
+
+      service.createNote('shipment-x9810', { content: 'New reply to Level 2', parentId: 'new-l2-reply' }).subscribe();
+      httpMock.expectOne('/api/collaboration/shipment/shipment-x9810/notes').flush({ data: createdL3 });
+
+      // Check Level 2 now has Level 3 reply
+      service.getNotesTree('shipment-x9810').subscribe((t) => (tree = t));
+      httpMock.expectOne('/api/collaboration/shipment/shipment-x9810/tree').flush('Offline', { status: 503, statusText: 'Offline' });
+      const currentL1 = tree.find((n) => n.id === l1Id)!;
+      const currentL2 = currentL1.replies.find((r) => r.id === 'new-l2-reply')!;
+      expect(currentL2.replies.length).toBe(1);
+      expect(currentL2.replies[0].content).toBe('New reply to Level 2');
+    });
+
+    it('should propagate error and not insert broken note when API fails on createNote', () => {
+      let errorOccurred = false;
+      service.createNote('shipment-mxus-002', { content: 'Should fail', parentId: null }).subscribe({
+        error: () => {
+          errorOccurred = true;
+        },
       });
 
-      httpMock
-        .expectOne('/api/collaboration/shipment/shipment-x9810/notes')
-        .flush('Offline', { status: 503, statusText: 'Offline' });
+      const req = httpMock.expectOne('/api/collaboration/shipment/shipment-mxus-002/notes');
+      req.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
 
-      expect(replyResult).toBeDefined();
-      expect(replyResult.content).toBe('Replying to Level 1 Master B/L');
-      expect(replyResult.parentId).toBe(targetParentId);
+      expect(errorOccurred).toBe(true);
+
+      // Tree should still be empty
+      let tree: NoteTreeNode[] = [];
+      service.getNotesTree('shipment-mxus-002').subscribe((t) => (tree = t));
+      httpMock.expectOne('/api/collaboration/shipment/shipment-mxus-002/tree').flush('Offline', { status: 503, statusText: 'Offline' });
+      expect(tree).toEqual([]);
     });
   });
 });
