@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StageType } from '@prisma/client';
 
 export class StageBreakdownDto {
@@ -82,4 +82,10 @@ export class FreightAuditSummaryDto {
     description: 'Breakdown of financial metrics aggregated by stage type',
   })
   breakdown!: StageBreakdownDto[];
+
+  @ApiPropertyOptional({
+    type: [StageBreakdownDto],
+    description: 'Alias breakdown of financial metrics aggregated by stage type',
+  })
+  stageBreakdown?: StageBreakdownDto[];
 }

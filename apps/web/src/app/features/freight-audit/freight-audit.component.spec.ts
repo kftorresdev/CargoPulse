@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FreightAuditComponent } from './freight-audit.component';
 import { FreightAuditService } from './services/freight-audit.service';
 import {
@@ -96,6 +96,7 @@ describe('FreightAuditComponent', () => {
   };
 
   beforeEach(async () => {
+    localStorage.clear();
     serviceMock = {
       getSummary: vi.fn().mockReturnValue(of(mockSummary)),
       getShipmentAudit: vi.fn().mockReturnValue(of(mockStages)),
@@ -119,7 +120,12 @@ describe('FreightAuditComponent', () => {
 
     fixture = TestBed.createComponent(FreightAuditComponent);
     component = fixture.componentInstance;
+    component.languageService.setLanguage('es');
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   it('should create the component', () => {
@@ -206,7 +212,16 @@ describe('FreightAuditComponent', () => {
   });
 
   describe('Stage Type Labels', () => {
-    it('should map stage types to human-readable labels', () => {
+    it('should map stage types to human-readable labels in Spanish and English', () => {
+      expect(component.getStageLabel('ORIGIN_HANDLING')).toBe('Arrastre de Origen');
+      expect(component.getStageLabel('TRANSIT_1')).toBe('Tránsito Internacional 1');
+      expect(component.getStageLabel('CUSTOMS_BORDER')).toBe(
+        'Despacho Aduanal y Cruce Fronterizo'
+      );
+      expect(component.getStageLabel('TRANSIT_2')).toBe('Tránsito Internacional 2');
+      expect(component.getStageLabel('FINAL_DESTINATION')).toBe('Entrega de Última Milla');
+
+      component.languageService.setLanguage('en');
       expect(component.getStageLabel('ORIGIN_HANDLING')).toBe('Origin Drayage');
       expect(component.getStageLabel('TRANSIT_1')).toBe('International Transit 1');
       expect(component.getStageLabel('CUSTOMS_BORDER')).toBe(
@@ -331,7 +346,7 @@ describe('FreightAuditComponent', () => {
   });
 
   describe('UI Template Elements', () => {
-    it('should render the 4 KPI cards with currency formatting', () => {
+    it('should render the 4 KPI cards with currency formatting in Spanish and English', () => {
       const compiled = fixture.nativeElement as HTMLElement;
       const kpiCards = compiled.querySelectorAll('.grid.grid-cols-1.sm\\:grid-cols-2 > div');
       expect(kpiCards.length).toBe(4);
@@ -342,32 +357,42 @@ describe('FreightAuditComponent', () => {
       expect(kpiCards[1].textContent).toContain('$9,270.00');
       // Net Variance
       expect(kpiCards[2].textContent).toContain('+$370.00');
-      // Disputed count
+      // Disputed count (Spanish default)
       expect(kpiCards[3].textContent).toContain('1');
+      expect(kpiCards[3].textContent).toContain('Disputa Activa');
+
+      component.languageService.setLanguage('en');
+      fixture.detectChanges();
       expect(kpiCards[3].textContent).toContain('Dispute Active');
     });
 
-    it('should render 5 table rows for the 5-leg stages', () => {
+    it('should render 5 table rows for the 5-leg stages in Spanish and English', () => {
       const compiled = fixture.nativeElement as HTMLElement;
       const rows = compiled.querySelectorAll('tbody tr');
       expect(rows.length).toBe(5);
 
-      // Check first row (Origin Drayage)
-      expect(rows[0].textContent).toContain('Origin Drayage');
+      // Check first row (Origin Drayage in Spanish default)
+      expect(rows[0].textContent).toContain('Arrastre de Origen');
       expect(rows[0].textContent).toContain('$1,200.00');
       expect(rows[0].textContent).toContain('APPROVED');
 
-      // Check second row (Transit 1 - Ocean Freight)
-      expect(rows[1].textContent).toContain('International Transit 1');
+      // Check second row (Transit 1 in Spanish default)
+      expect(rows[1].textContent).toContain('Tránsito Internacional 1');
       expect(rows[1].textContent).toContain('DISPUTED');
       expect(rows[1].textContent).toContain('+7.78%');
+
+      // When switched to English
+      component.languageService.setLanguage('en');
+      fixture.detectChanges();
+      expect(rows[0].textContent).toContain('Origin Drayage');
+      expect(rows[1].textContent).toContain('International Transit 1');
     });
 
     it('should render the Export to Excel button and trigger export on click', () => {
       const exportSpy = vi.spyOn(component, 'exportExcel');
       const compiled = fixture.nativeElement as HTMLElement;
       const exportBtn = Array.from(compiled.querySelectorAll('button')).find((b) =>
-        b.textContent?.includes('Export to Excel')
+        b.textContent?.includes('Exportar a Excel') || b.textContent?.includes('Export to Excel')
       );
 
       expect(exportBtn).toBeTruthy();

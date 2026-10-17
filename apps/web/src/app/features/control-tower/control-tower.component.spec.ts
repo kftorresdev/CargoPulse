@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ControlTowerComponent } from './control-tower.component';
 import { ControlTowerService } from './services/control-tower.service';
 import { TopologyNode, TopologyLink } from './models/topology.model';
@@ -12,6 +12,7 @@ describe('ControlTowerComponent', () => {
   let controlTowerService: ControlTowerService;
 
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [ControlTowerComponent],
       providers: [
@@ -23,8 +24,13 @@ describe('ControlTowerComponent', () => {
 
     fixture = TestBed.createComponent(ControlTowerComponent);
     component = fixture.componentInstance;
+    component.languageService.setLanguage('es');
     controlTowerService = TestBed.inject(ControlTowerService);
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   it('should create the component', () => {
@@ -228,14 +234,26 @@ describe('ControlTowerComponent', () => {
   });
 
   describe('DOM Rendering', () => {
-    it('should render page title and subtitle', () => {
+    it('should render page title and subtitle in default Spanish and switch to English', () => {
       const el = fixture.nativeElement as HTMLElement;
+      expect(el.textContent).toContain('Torre de Control y DAG de Topología');
+      expect(el.textContent).toContain('transfronteriza');
+
+      component.languageService.setLanguage('en');
+      fixture.detectChanges();
       expect(el.textContent).toContain('Control Tower & Topology DAG');
       expect(el.textContent).toContain('cross-border');
     });
 
-    it('should render Quick KPI strip cards', () => {
+    it('should render Quick KPI strip cards in default Spanish and switch to English', () => {
       const el = fixture.nativeElement as HTMLElement;
+      expect(el.textContent).toContain('Nodos DAG Activos');
+      expect(el.textContent).toContain('Envíos en Tránsito');
+      expect(el.textContent).toContain('Retenciones Aduanales');
+      expect(el.textContent).toContain('Llegadas a Tiempo (OTA)');
+
+      component.languageService.setLanguage('en');
+      fixture.detectChanges();
       expect(el.textContent).toContain('Active DAG Nodes');
       expect(el.textContent).toContain('In-Transit Shipments');
       expect(el.textContent).toContain('Customs Holds');

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import {
   FreightAuditSummary,
@@ -275,13 +275,20 @@ export class FreightAuditService {
     return this.http
       .get(`${this.baseUrl}/export/excel`, { responseType: 'blob' })
       .pipe(
+        map((blob: Blob) => {
+          if (!blob.type || blob.type === 'application/octet-stream') {
+            return new Blob([blob], {
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            });
+          }
+          return blob;
+        }),
         tap((blob: Blob) => {
           this.triggerBlobDownload(blob, 'freight-audit-report.xlsx');
         }),
-        catchError(() => {
-          const fallbackBlob = this.generateFallbackReportBlob();
-          this.triggerBlobDownload(fallbackBlob, 'freight-audit-report.xlsx');
-          return of(fallbackBlob);
+        catchError((error) => {
+          console.error('Freight audit Excel export failed:', error);
+          return throwError(() => error);
         })
       );
   }
@@ -458,22 +465,5 @@ export class FreightAuditService {
         return;
       }
     }
-  }
-
-  private generateFallbackReportBlob(): Blob {
-    const csvContent =
-      'Shipment,Stage Order,Stage Type,Contracted Cost,Actual Cost,Variance,Variance %,Status,Audit Notes\n' +
-      Object.entries(this.inMemoryStages)
-        .flatMap(([shipmentId, stages]) =>
-          stages.map(
-            (s) =>
-              `"${shipmentId}",${s.stageOrder},"${s.stageType}",${s.contractedCost},${s.actualCost},${s.variance},${s.variancePercent}%,"${s.status}","${s.auditNotes ?? ''}"`
-          )
-        )
-        .join('\n');
-
-    return new Blob([csvContent], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    });
   }
 }

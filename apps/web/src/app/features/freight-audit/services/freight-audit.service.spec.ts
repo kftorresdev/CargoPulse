@@ -204,19 +204,22 @@ describe('FreightAuditService', () => {
       );
     });
 
-    it('should fall back to generated blob if export endpoint fails', () => {
+    it('should propagate error and not trigger corrupted download if export endpoint fails', () => {
       const spyTrigger = vi.spyOn(service, 'triggerBlobDownload').mockImplementation(() => {});
 
-      let returnedBlob: Blob | undefined;
-      service.exportExcel().subscribe((blob) => {
-        returnedBlob = blob;
+      let errorOccurred = false;
+      service.exportExcel().subscribe({
+        next: () => {},
+        error: () => {
+          errorOccurred = true;
+        },
       });
 
       const req = httpMock.expectOne('/api/freight-audit/export/excel');
       req.error(new ProgressEvent('error'));
 
-      expect(returnedBlob).toBeDefined();
-      expect(spyTrigger).toHaveBeenCalled();
+      expect(errorOccurred).toBe(true);
+      expect(spyTrigger).not.toHaveBeenCalled();
     });
   });
 });

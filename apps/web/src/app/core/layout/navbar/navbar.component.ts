@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { AuthStore } from '@core/state/auth.store';
 import { Role } from '@core/models/user.model';
+import { LanguageService, SupportedLanguage } from '@core/services/language.service';
 
 @Component({
   selector: 'app-navbar',
@@ -20,20 +21,49 @@ import { Role } from '@core/models/user.model';
         <div class="flex items-center gap-2.5">
           <span class="text-lg font-black tracking-tight text-white font-sans">Cargo<span class="text-blue-500">Pulse</span></span>
           <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">
-            Control Tower
+            {{ languageService.t('navbar.subtitle') }}
           </span>
         </div>
       </div>
 
-      <!-- Right: Network Status, User Profile & Actions -->
-      <div class="flex items-center gap-3 sm:gap-6">
+      <!-- Right: Network Status, Language Toggle, User Profile & Actions -->
+      <div class="flex items-center gap-2.5 sm:gap-4 md:gap-6">
+        <!-- Language Switcher Pill [ 🇪🇸 ES | 🇺🇸 EN ] -->
+        <div class="inline-flex items-center rounded-full bg-slate-800/80 p-0.5 border border-slate-700 shadow-inner select-none">
+          <button
+            type="button"
+            (click)="setLanguage('es')"
+            class="lang-btn-es px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 focus:outline-none"
+            [ngClass]="languageService.currentLang() === 'es' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
+            title="Español"
+            aria-label="Español">
+            <span>🇪🇸</span>
+            <span>ES</span>
+          </button>
+          <span class="text-slate-600 text-xs font-mono px-0.5">|</span>
+          <button
+            type="button"
+            (click)="setLanguage('en')"
+            class="lang-btn-en px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 focus:outline-none"
+            [ngClass]="languageService.currentLang() === 'en' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
+            title="English"
+            aria-label="English">
+            <span>🇺🇸</span>
+            <span>EN</span>
+          </button>
+        </div>
+
         <!-- Network Status Indicator -->
-        <div class="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-sm" title="Telemetry stream status: Connected">
+        <div
+          class="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-sm"
+          [title]="languageService.t('navbar.status_tooltip')">
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span class="text-xs font-medium text-emerald-400 hidden xs:inline tracking-wide">Connected</span>
+          <span class="text-xs font-medium text-emerald-400 hidden xs:inline tracking-wide">
+            {{ languageService.t('navbar.status_connected') }}
+          </span>
         </div>
 
         <div class="h-6 w-px bg-slate-800 hidden sm:block"></div>
@@ -71,12 +101,12 @@ import { Role } from '@core/models/user.model';
         <button
           (click)="onLogout()"
           type="button"
-          class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 border border-slate-700 transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-slate-600"
-          title="Sign Out">
+          class="sign-out-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 border border-slate-700 transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-slate-600"
+          [title]="languageService.t('navbar.sign_out')">
           <svg class="w-4 h-4 text-slate-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          <span class="hidden sm:inline">Sign Out</span>
+          <span class="hidden sm:inline">{{ languageService.t('navbar.sign_out') }}</span>
         </button>
       </div>
     </header>
@@ -84,6 +114,7 @@ import { Role } from '@core/models/user.model';
 })
 export class NavbarComponent {
   readonly authStore = inject(AuthStore);
+  readonly languageService = inject(LanguageService);
 
   readonly userInitials = computed(() => {
     const user = this.authStore.user();
@@ -111,17 +142,26 @@ export class NavbarComponent {
     const role: Role | null = this.authStore.userRole();
     switch (role) {
       case 'ADMIN':
-        return 'Admin';
+        return this.languageService.t('roles.admin');
       case 'LOGISTICS_OPERATOR':
-        return 'Operator';
+        return this.languageService.t('roles.operator');
       case 'FREIGHT_AUDITOR':
-        return 'Auditor';
+        return this.languageService.t('roles.auditor');
       default:
-        return 'Guest';
+        return this.languageService.t('roles.guest');
     }
   });
+
+  setLanguage(lang: SupportedLanguage): void {
+    this.languageService.setLanguage(lang);
+  }
+
+  toggleLanguage(): void {
+    this.languageService.toggleLanguage();
+  }
 
   onLogout(): void {
     this.authStore.logout();
   }
 }
+

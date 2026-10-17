@@ -8,6 +8,7 @@ import { ShipmentsModule } from './modules/shipments/shipments.module.js';
 import { CollaborationModule } from './modules/collaboration/collaboration.module.js';
 import { FreightAuditModule } from './modules/freight-audit/freight-audit.module.js';
 import { AlertCenterModule } from './modules/alert-center/alert-center.module.js';
+import { ControlTowerModule } from './modules/control-tower/control-tower.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AlertCenterModule } from './modules/alert-center/alert-center.module.js
     CollaborationModule,
     FreightAuditModule,
     AlertCenterModule,
+    ControlTowerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

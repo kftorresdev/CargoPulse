@@ -8,6 +8,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 describe('FreightAuditService', () => {
   let service: FreightAuditService;
   let prismaMock: {
+    isConnected?: boolean;
     freightStage: {
       findMany: ReturnType<typeof vi.fn>;
       findUnique: ReturnType<typeof vi.fn>;
@@ -280,6 +281,96 @@ describe('FreightAuditService', () => {
       expect(responseEnded).toBe(true);
       expect(bufferSent).not.toBeNull();
       expect(Buffer.isBuffer(bufferSent)).toBe(true);
+    });
+  });
+
+  describe('Dual-Mode In-Memory Resilience (Offline Fallback)', () => {
+    beforeEach(() => {
+      prismaMock.isConnected = false;
+    });
+
+    it('should compute financial summary from in-memory DEMO_STAGES when DB is offline', async () => {
+      const summary = await service.getSummary();
+
+      expect(summary.totalContractedCost).toBe(27000);
+      expect(summary.totalActualCost).toBe(27770);
+      expect(summary.totalVariance).toBe(770);
+      expect(summary.variancePercentage).toBe(2.85);
+      expect(summary.disputedStagesCount).toBe(2);
+      expect(summary.breakdown).toHaveLength(5);
+      expect(summary.stageBreakdown).toHaveLength(5);
+      expect(prismaMock.freightStage.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should return 5 stages matching shipmentId or trackingNumber in offline mode', async () => {
+      const stages = await service.getShipmentAudit('CP-2026-X9810');
+
+      expect(stages).toHaveLength(5);
+      expect(stages[0].stageType).toBe(StageType.ORIGIN_HANDLING);
+      expect(stages[1].status).toBe(StageStatus.DISPUTED);
+      expect(prismaMock.shipment.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should update in-memory stage and auto-dispute when variance > 5% in offline mode', async () => {
+      const result = await service.updateStageAudit('stage-x9810-1', {
+        actualCost: 1350, // +12.5% variance from 1200
+        auditNotes: 'Offline audit override noted',
+      });
+
+      expect(result.id).toBe('stage-x9810-1');
+      expect(result.actualCost).toBe(1350);
+      expect(result.variance).toBe(150);
+      expect(result.variancePercent).toBe(12.5);
+      expect(result.status).toBe(StageStatus.DISPUTED);
+      expect(result.auditNotes).toBe('Offline audit override noted');
+      expect(prismaMock.freightStage.update).not.toHaveBeenCalled();
+    });
+
+    it('should export formatted excel using DEMO_STAGES in offline mode', async () => {
+      const headers: Record<string, string> = {};
+      let responseEnded = false;
+      let bufferSent: Buffer | null = null;
+
+      const setHeaderSpy = vi.fn((key: string, val: string) => {
+        headers[key] = val;
+      });
+      const endSpy = vi.fn((chunk?: Buffer) => {
+        responseEnded = true;
+        if (chunk) bufferSent = chunk;
+      });
+
+      const mockRes = {
+        setHeader: setHeaderSpy,
+        end: endSpy,
+      } as unknown as Response;
+
+      await service.exportToExcel(mockRes);
+
+      expect(setHeaderSpy).toHaveBeenCalledWith(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      expect(setHeaderSpy).toHaveBeenCalledWith(
+        'Content-Disposition',
+        'attachment; filename=freight-audit-report.xlsx',
+      );
+      expect(responseEnded).toBe(true);
+      expect(bufferSent).not.toBeNull();
+      expect(Buffer.isBuffer(bufferSent)).toBe(true);
+      expect(prismaMock.freightStage.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should fallback to in-memory demo stages when database query throws error', async () => {
+      prismaMock.isConnected = true;
+      prismaMock.freightStage.findMany.mockRejectedValue(
+        new Error('PostgreSQL socket closed unexpectedly'),
+      );
+
+      const summary = await service.getSummary();
+
+      expect(summary).toBeDefined();
+      expect(summary.totalContractedCost).toBe(27000);
+      expect(summary.breakdown).toHaveLength(5);
     });
   });
 });

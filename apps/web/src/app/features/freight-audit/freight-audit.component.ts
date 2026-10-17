@@ -21,6 +21,7 @@ import {
   StageType,
 } from './models/freight-audit.model';
 import { FreightAuditService } from './services/freight-audit.service';
+import { LanguageService } from '@core/services/language.service';
 
 interface ShipmentOption {
   id: string;
@@ -62,10 +63,10 @@ interface ShipmentOption {
             </span>
             <div>
               <h1 class="text-2xl font-bold text-slate-100 tracking-tight">
-                5-Leg Freight Cost Audit Engine
+                {{ languageService.t('freight_audit.title') }}
               </h1>
               <p class="text-xs text-slate-400 mt-0.5">
-                Automated multi-leg invoice reconciliation, tariff validation, demurrage detection, and variance auditing.
+                {{ languageService.t('freight_audit.subtitle') }}
               </p>
             </div>
           </div>
@@ -98,7 +99,7 @@ interface ShipmentOption {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              <span>Exporting Matrix...</span>
+              <span>{{ languageService.t('freight_audit.exporting') }}</span>
             } @else {
               <svg
                 class="w-4 h-4"
@@ -113,7 +114,7 @@ interface ShipmentOption {
                   d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <span>Export to Excel (.xlsx)</span>
+              <span>{{ languageService.t('freight_audit.export_excel') }}</span>
             }
           </button>
         </div>
@@ -126,9 +127,9 @@ interface ShipmentOption {
           class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm"
         >
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium text-slate-400">Total Contracted</span>
+            <span class="text-xs font-medium text-slate-400">{{ languageService.t('freight_audit.kpi.total_contracted') }}</span>
             <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-              Target Baseline
+              {{ languageService.t('freight_audit.kpi.target_baseline') }}
             </span>
           </div>
           <div class="mt-2 text-2xl font-bold text-slate-100">
@@ -136,7 +137,7 @@ interface ShipmentOption {
           </div>
           <div class="mt-1 text-xs text-slate-400 flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-            <span>Agreed tariff rate-cards</span>
+            <span>{{ languageService.t('freight_audit.kpi.agreed_tariffs') }}</span>
           </div>
         </div>
 
@@ -145,9 +146,9 @@ interface ShipmentOption {
           class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm"
         >
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium text-slate-400">Total Actual Billed</span>
+            <span class="text-xs font-medium text-slate-400">{{ languageService.t('freight_audit.kpi.total_actual') }}</span>
             <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-              Invoiced
+              {{ languageService.t('freight_audit.kpi.invoiced') }}
             </span>
           </div>
           <div class="mt-2 text-2xl font-bold text-slate-100">
@@ -155,7 +156,7 @@ interface ShipmentOption {
           </div>
           <div class="mt-1 text-xs text-slate-400 flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-            <span>Carrier invoice total</span>
+            <span>{{ languageService.t('freight_audit.kpi.carrier_invoice_total') }}</span>
           </div>
         </div>
 
@@ -164,7 +165,7 @@ interface ShipmentOption {
           class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm"
         >
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium text-slate-400">Net Variance</span>
+            <span class="text-xs font-medium text-slate-400">{{ languageService.t('freight_audit.kpi.net_variance') }}</span>
             <span
               class="text-[10px] uppercase font-mono px-2 py-0.5 rounded border"
               [ngClass]="getVarianceBadgeClass(variancePercent())"
@@ -187,10 +188,10 @@ interface ShipmentOption {
           <div class="mt-1 text-xs text-slate-400">
             {{
               totalVariance() === 0
-                ? 'Balanced against agreed contracts'
+                ? languageService.t('freight_audit.kpi.balanced')
                 : totalVariance() > 0
-                  ? 'Cost overrun detected'
-                  : 'Volume discount savings secured'
+                  ? languageService.t('freight_audit.kpi.cost_overrun')
+                  : languageService.t('freight_audit.kpi.savings')
             }}
           </div>
         </div>
@@ -200,18 +201,18 @@ interface ShipmentOption {
           class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm"
         >
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium text-slate-400">Disputed Stages</span>
+            <span class="text-xs font-medium text-slate-400">{{ languageService.t('freight_audit.kpi.disputed_stages') }}</span>
             @if (isDisputed()) {
               <span
                 class="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/30 animate-pulse"
               >
-                Dispute Active
+                {{ languageService.t('freight_audit.kpi.dispute_active') }}
               </span>
             } @else {
               <span
                 class="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
               >
-                All Clear
+                {{ languageService.t('freight_audit.kpi.all_clear') }}
               </span>
             }
           </div>
@@ -220,13 +221,13 @@ interface ShipmentOption {
             [ngClass]="isDisputed() ? 'text-rose-400' : 'text-slate-100'"
           >
             {{ disputedCount() }}
-            <span class="text-sm font-normal text-slate-400">/ {{ stages().length }} legs</span>
+            <span class="text-sm font-normal text-slate-400">/ {{ stages().length }} {{ languageService.t('freight_audit.kpi.legs') }}</span>
           </div>
           <div class="mt-1 text-xs text-slate-400">
             {{
               isDisputed()
-                ? 'Requires auditor justification / credit'
-                : 'Zero tariff anomalies detected'
+                ? languageService.t('freight_audit.kpi.requires_justification')
+                : languageService.t('freight_audit.kpi.zero_anomalies')
             }}
           </div>
         </div>
@@ -237,14 +238,14 @@ interface ShipmentOption {
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
             <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Select Shipment Audit Target
+              {{ languageService.t('freight_audit.selector.title') }}
             </span>
             <p class="text-xs text-slate-500 mt-0.5">
-              Review 5-stage drayage, ocean/air, customs, rail, and final mile breakdown.
+              {{ languageService.t('freight_audit.selector.subtitle') }}
             </p>
           </div>
           <div class="text-xs text-slate-400 font-mono">
-            Active: <span class="text-emerald-400 font-semibold">{{ selectedShipmentId() }}</span>
+            {{ languageService.t('freight_audit.selector.active') }}: <span class="text-emerald-400 font-semibold">{{ selectedShipmentId() }}</span>
           </div>
         </div>
 
@@ -290,15 +291,15 @@ interface ShipmentOption {
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 border-b border-slate-800 pb-4">
           <div>
             <h2 class="text-base font-semibold text-slate-200">
-              5-Stage Reconciliation Matrix
+              {{ languageService.t('freight_audit.matrix.title') }}
             </h2>
             <p class="text-xs text-slate-400 mt-0.5">
-              Granular comparison of contracted rate tariffs vs billed actuals with chromatic variance detection.
+              {{ languageService.t('freight_audit.matrix.subtitle') }}
             </p>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">
-              AUDIT-POLICY-2026
+              {{ languageService.t('freight_audit.matrix.policy') }}
             </span>
           </div>
         </div>
@@ -317,7 +318,7 @@ interface ShipmentOption {
               "
             >
               <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1">
-                <span class="text-blue-400">Leg {{ stage.stageOrder }}</span>
+                <span class="text-blue-400">{{ languageService.t('freight_audit.matrix.leg') }} {{ stage.stageOrder }}</span>
                 <span
                   class="px-1.5 py-0.2 rounded font-mono text-[9px] border"
                   [ngClass]="getVarianceBadgeClass(stage.variancePercent)"
@@ -340,15 +341,15 @@ interface ShipmentOption {
           <table class="w-full text-left text-xs text-slate-300">
             <thead class="bg-slate-950 text-slate-400 uppercase font-mono text-[11px] border-b border-slate-800">
               <tr>
-                <th class="px-4 py-3 text-center w-12">#</th>
-                <th class="px-4 py-3">Stage / Leg Name</th>
-                <th class="px-4 py-3">Contracted ($)</th>
-                <th class="px-4 py-3">Actual ($)</th>
-                <th class="px-4 py-3">Variance ($)</th>
-                <th class="px-4 py-3">Variance (%)</th>
-                <th class="px-4 py-3">Status</th>
-                <th class="px-4 py-3">Audit Notes</th>
-                <th class="px-4 py-3 text-right">Actions</th>
+                <th class="px-4 py-3 text-center w-12">{{ languageService.t('freight_audit.table.num') }}</th>
+                <th class="px-4 py-3">{{ languageService.t('freight_audit.table.stage_name') }}</th>
+                <th class="px-4 py-3">{{ languageService.t('freight_audit.table.contracted') }}</th>
+                <th class="px-4 py-3">{{ languageService.t('freight_audit.table.actual') }}</th>
+                <th class="px-4 py-3">{{ languageService.t('freight_audit.table.variance') }}</th>
+                <th class="px-4 py-3">{{ languageService.t('freight_audit.table.variance_pct') }}</th>
+                <th class="px-4 py-3">{{ languageService.t('freight_audit.table.status') }}</th>
+                <th class="px-4 py-3">{{ languageService.t('freight_audit.table.audit_notes') }}</th>
+                <th class="px-4 py-3 text-right">{{ languageService.t('freight_audit.table.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60 bg-slate-900/40">
@@ -424,7 +425,7 @@ interface ShipmentOption {
                   </td>
 
                   <!-- Audit Notes -->
-                  <td class="px-4 py-3.5 max-w-xs text-slate-400 truncate" [title]="stage.auditNotes ?? 'No notes entered.'">
+                  <td class="px-4 py-3.5 max-w-xs text-slate-400 truncate" [title]="stage.auditNotes ?? languageService.t('freight_audit.table.no_notes')">
                     {{ stage.auditNotes || '—' }}
                   </td>
 
@@ -438,7 +439,7 @@ interface ShipmentOption {
                       <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                      Edit/Audit
+                      {{ languageService.t('freight_audit.table.edit_audit') }}
                     </button>
                   </td>
                 </tr>
@@ -468,10 +469,10 @@ interface ShipmentOption {
                 </span>
                 <div>
                   <h3 class="text-base font-semibold text-slate-100">
-                    Audit Adjustment
+                    {{ languageService.t('freight_audit.modal.title') }}
                   </h3>
                   <p class="text-xs text-slate-400">
-                    Leg {{ currentStage.stageOrder }}: {{ getStageLabel(currentStage.stageType) }} ({{ selectedShipmentId() }})
+                    {{ languageService.t('freight_audit.modal.leg_info', { leg: currentStage.stageOrder, stage: getStageLabel(currentStage.stageType), shipment: selectedShipmentId() }) }}
                   </p>
                 </div>
               </div>
@@ -479,7 +480,7 @@ interface ShipmentOption {
                 type="button"
                 (click)="closeEditModal()"
                 class="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-slate-800 transition-colors"
-                aria-label="Close modal"
+                [attr.aria-label]="languageService.t('freight_audit.modal.close')"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -492,8 +493,8 @@ interface ShipmentOption {
               <!-- Contracted Reference (Read-only) -->
               <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between">
                 <div>
-                  <div class="text-xs text-slate-400">Baseline Contracted Tariff</div>
-                  <div class="text-xs text-slate-500">Master Service Agreement agreed rate</div>
+                  <div class="text-xs text-slate-400">{{ languageService.t('freight_audit.modal.baseline_tariff') }}</div>
+                  <div class="text-xs text-slate-500">{{ languageService.t('freight_audit.modal.msa_agreed_rate') }}</div>
                 </div>
                 <div class="text-base font-mono font-bold text-slate-200">
                   {{ currentStage.contractedCost | currency: 'USD' : 'symbol' : '1.2-2' }}
@@ -503,7 +504,7 @@ interface ShipmentOption {
               <!-- Actual Cost Input -->
               <div>
                 <label for="actualCostInput" class="block text-xs font-medium text-slate-300 mb-1.5">
-                  Actual Incurred Cost ($ USD) <span class="text-rose-400">*</span>
+                  {{ languageService.t('freight_audit.modal.actual_cost') }} <span class="text-rose-400">*</span>
                 </label>
                 <div class="relative">
                   <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
@@ -522,7 +523,7 @@ interface ShipmentOption {
                 </div>
                 @if (auditForm.controls.actualCost.invalid && auditForm.controls.actualCost.touched) {
                   <p class="mt-1 text-xs text-rose-400">
-                    Actual cost must be a positive number.
+                    {{ languageService.t('freight_audit.modal.actual_cost_error') }}
                   </p>
                 }
               </div>
@@ -530,7 +531,7 @@ interface ShipmentOption {
               <!-- Live Preview Calculation Box -->
               <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4 space-y-2.5">
                 <div class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center justify-between">
-                  <span>Live Variance Preview</span>
+                  <span>{{ languageService.t('freight_audit.modal.live_variance_preview') }}</span>
                   <span
                     class="text-[10px] px-2 py-0.5 rounded border"
                     [ngClass]="getVarianceBadgeClass(previewVariancePercent())"
@@ -540,7 +541,7 @@ interface ShipmentOption {
                 </div>
                 <div class="grid grid-cols-2 gap-3 pt-1 border-t border-slate-800/80">
                   <div>
-                    <span class="text-[11px] text-slate-400 block">Calculated Variance</span>
+                    <span class="text-[11px] text-slate-400 block">{{ languageService.t('freight_audit.modal.calculated_variance') }}</span>
                     <span
                       class="text-sm font-mono font-bold"
                       [ngClass]="
@@ -555,7 +556,7 @@ interface ShipmentOption {
                     </span>
                   </div>
                   <div>
-                    <span class="text-[11px] text-slate-400 block">Auto-Status Detection</span>
+                    <span class="text-[11px] text-slate-400 block">{{ languageService.t('freight_audit.modal.auto_status_detection') }}</span>
                     <span
                       class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border"
                       [ngClass]="getStatusBadgeClass(previewStatus())"
@@ -569,7 +570,7 @@ interface ShipmentOption {
               <!-- Status Override -->
               <div>
                 <label for="statusSelect" class="block text-xs font-medium text-slate-300 mb-1.5">
-                  Audit Status Override
+                  {{ languageService.t('freight_audit.modal.status_override') }}
                 </label>
                 <select
                   id="statusSelect"
@@ -577,26 +578,26 @@ interface ShipmentOption {
                   (change)="onStatusSelectChange()"
                   class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
                 >
-                  <option value="APPROVED">APPROVED (Within tolerance / Verified)</option>
-                  <option value="DISPUTED">DISPUTED (Flagged for carrier rebate/waiver)</option>
-                  <option value="PENDING">PENDING (Awaiting supporting documents)</option>
+                  <option value="APPROVED">{{ languageService.t('freight_audit.modal.status_approved') }}</option>
+                  <option value="DISPUTED">{{ languageService.t('freight_audit.modal.status_disputed') }}</option>
+                  <option value="PENDING">{{ languageService.t('freight_audit.modal.status_pending') }}</option>
                 </select>
                 <p class="mt-1 text-[11px] text-slate-500">
-                  Rule: Automatically flags as <span class="text-rose-400 font-semibold">DISPUTED</span> when variance exceeds +5%.
+                  {{ languageService.t('freight_audit.modal.rule_note') }}
                 </p>
               </div>
 
               <!-- Audit Notes Textarea -->
               <div>
                 <label for="auditNotesInput" class="block text-xs font-medium text-slate-300 mb-1.5">
-                  Audit Notes & Discrepancy Justification
+                  {{ languageService.t('freight_audit.modal.audit_notes') }}
                 </label>
                 <textarea
                   id="auditNotesInput"
                   rows="3"
                   formControlName="auditNotes"
                   class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
-                  placeholder="Enter invoice discrepancy reasoning, tariff rule reference, or carrier dispute tracking..."
+                  [placeholder]="languageService.t('freight_audit.modal.notes_placeholder')"
                 ></textarea>
               </div>
 
@@ -607,7 +608,7 @@ interface ShipmentOption {
                   (click)="closeEditModal()"
                   class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
                 >
-                  Cancel
+                  {{ languageService.t('freight_audit.modal.cancel') }}
                 </button>
                 <button
                   type="submit"
@@ -619,9 +620,9 @@ interface ShipmentOption {
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Saving...</span>
+                    <span>{{ languageService.t('freight_audit.modal.saving') }}</span>
                   } @else {
-                    <span>Save Audit Adjustment</span>
+                    <span>{{ languageService.t('freight_audit.modal.save') }}</span>
                   }
                 </button>
               </div>
@@ -634,6 +635,7 @@ interface ShipmentOption {
 })
 export class FreightAuditComponent implements OnInit {
   private readonly freightAuditService = inject(FreightAuditService);
+  readonly languageService = inject(LanguageService);
 
   readonly shipments: ShipmentOption[] = [
     {
@@ -840,15 +842,15 @@ export class FreightAuditComponent implements OnInit {
   getStageLabel(stageType: StageType): string {
     switch (stageType) {
       case 'ORIGIN_HANDLING':
-        return 'Origin Drayage';
+        return this.languageService.t('freight_audit.stage.origin_handling');
       case 'TRANSIT_1':
-        return 'International Transit 1';
+        return this.languageService.t('freight_audit.stage.transit_1');
       case 'CUSTOMS_BORDER':
-        return 'Customs Clearance & Border Crossing';
+        return this.languageService.t('freight_audit.stage.customs_border');
       case 'TRANSIT_2':
-        return 'International Transit 2';
+        return this.languageService.t('freight_audit.stage.transit_2');
       case 'FINAL_DESTINATION':
-        return 'Final Mile Delivery';
+        return this.languageService.t('freight_audit.stage.final_destination');
       default:
         return stageType;
     }

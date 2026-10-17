@@ -25,6 +25,7 @@ import {
   ControlTowerKpis,
   TopologyData
 } from './models/topology.model';
+import { LanguageService } from '@core/services/language.service';
 
 /**
  * Resilient Dagre layout adapter ensuring compatibility across ESM/CJS runtime bundles
@@ -148,17 +149,17 @@ export class CrossBorderDagreLayout extends DagreLayout {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3a9 9 0 0 1 9 9m-9-9a9 9 0 0 0-9 9m9-9v18m-9-9h18"/>
               </svg>
             </span>
-            <h1 class="text-2xl font-bold text-slate-100 tracking-tight">Control Tower & Topology DAG</h1>
+            <h1 class="text-2xl font-bold text-slate-100 tracking-tight">{{ languageService.t('control_tower.title') }}</h1>
           </div>
           <p class="mt-1 text-sm text-slate-400">
-            Real-time cross-border multi-modal topology, supply chain node telemetry, and automated routing graph.
+            {{ languageService.t('control_tower.subtitle') }}
           </p>
         </div>
 
         <div class="flex items-center gap-3">
           <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-            DAG Live Sync Active
+            {{ languageService.t('control_tower.live_sync') }}
           </span>
           <button
             type="button"
@@ -167,7 +168,7 @@ export class CrossBorderDagreLayout extends DagreLayout {
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Refresh Telemetry
+            {{ languageService.t('control_tower.refresh_telemetry') }}
           </button>
         </div>
       </div>
@@ -176,40 +177,40 @@ export class CrossBorderDagreLayout extends DagreLayout {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
           <div class="flex items-center justify-between text-xs text-slate-400">
-            <span>Active DAG Nodes</span>
-            <span class="text-emerald-400 font-semibold">100% Operational</span>
+            <span>{{ languageService.t('control_tower.kpi.active_nodes') }}</span>
+            <span class="text-emerald-400 font-semibold">{{ languageService.t('control_tower.kpi.operational') }}</span>
           </div>
           <div class="mt-2 text-2xl font-bold text-slate-100">{{ kpis().activeNodes }}</div>
-          <div class="mt-1 text-xs text-slate-500">Cross-Border Hubs & Border Gates</div>
+          <div class="mt-1 text-xs text-slate-500">{{ languageService.t('control_tower.kpi.active_nodes_sub') }}</div>
         </div>
 
         <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
           <div class="flex items-center justify-between text-xs text-slate-400">
-            <span>In-Transit Shipments</span>
-            <span class="text-blue-400 font-semibold">Live Transit</span>
+            <span>{{ languageService.t('control_tower.kpi.in_transit') }}</span>
+            <span class="text-blue-400 font-semibold">{{ languageService.t('control_tower.kpi.live_transit') }}</span>
           </div>
           <div class="mt-2 text-2xl font-bold text-slate-100">{{ kpis().inTransitShipments }}</div>
-          <div class="mt-1 text-xs text-slate-500">Multimodal Road, Rail & Ocean</div>
+          <div class="mt-1 text-xs text-slate-500">{{ languageService.t('control_tower.kpi.in_transit_sub') }}</div>
         </div>
 
         <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
           <div class="flex items-center justify-between text-xs text-slate-400">
-            <span>Customs Holds</span>
+            <span>{{ languageService.t('control_tower.kpi.customs_holds') }}</span>
             <span [class.text-amber-400]="kpis().customsHolds > 0" [class.text-emerald-400]="kpis().customsHolds === 0" class="font-semibold">
-              {{ kpis().customsHolds > 0 ? 'Action Required' : 'Clear' }}
+              {{ kpis().customsHolds > 0 ? languageService.t('control_tower.kpi.action_required') : languageService.t('control_tower.kpi.clear') }}
             </span>
           </div>
           <div class="mt-2 text-2xl font-bold text-amber-400">{{ kpis().customsHolds }}</div>
-          <div class="mt-1 text-xs text-slate-500">Border Inspections & Clearance</div>
+          <div class="mt-1 text-xs text-slate-500">{{ languageService.t('control_tower.kpi.customs_sub') }}</div>
         </div>
 
         <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
           <div class="flex items-center justify-between text-xs text-slate-400">
-            <span>On-Time Arrival (OTA)</span>
-            <span class="text-emerald-400 font-semibold">SLA Target &ge; 95%</span>
+            <span>{{ languageService.t('control_tower.kpi.on_time') }}</span>
+            <span class="text-emerald-400 font-semibold">{{ languageService.t('control_tower.kpi.sla_target') }}</span>
           </div>
           <div class="mt-2 text-2xl font-bold text-emerald-400">{{ kpis().onTimeRate }}</div>
-          <div class="mt-1 text-xs text-slate-500">Predicted SLA Compliance</div>
+          <div class="mt-1 text-xs text-slate-500">{{ languageService.t('control_tower.kpi.sla_sub') }}</div>
         </div>
       </div>
 
@@ -218,17 +219,17 @@ export class CrossBorderDagreLayout extends DagreLayout {
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/80 pb-3">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-            <h2 class="text-base font-semibold text-slate-200">Interactive Directed Acyclic Graph (DAG)</h2>
+            <h2 class="text-base font-semibold text-slate-200">{{ languageService.t('control_tower.graph.title') }}</h2>
           </div>
           <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">Pan & Zoom Enabled</span>
-            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">Left-to-Right Hierarchy</span>
+            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">{{ languageService.t('control_tower.graph.pan_zoom') }}</span>
+            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">{{ languageService.t('control_tower.graph.lr_hierarchy') }}</span>
             @if (selectedNode() || selectedLink()) {
               <button
                 type="button"
                 (click)="clearFilter()"
                 class="px-2.5 py-0.5 rounded bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 border border-blue-500/40 transition-colors">
-                Clear Selection
+                {{ languageService.t('control_tower.graph.clear_selection') }}
               </button>
             }
           </div>
@@ -238,22 +239,22 @@ export class CrossBorderDagreLayout extends DagreLayout {
         <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 mb-3 px-2">
           <div class="flex items-center gap-1.5">
             <span class="w-3 h-3 rounded-full bg-blue-500 border border-blue-300"></span>
-            <span>Origin</span>
+            <span>{{ languageService.t('control_tower.node_type.origin') }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="w-3 h-3 rounded bg-amber-500 border border-amber-300"></span>
-            <span>Customs / Border</span>
+            <span>{{ languageService.t('control_tower.node_type.customs_border') }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="w-3 h-3 rotate-45 bg-emerald-500 border border-emerald-300"></span>
-            <span>Destination (Normal)</span>
+            <span>{{ languageService.t('control_tower.node_type.destination_normal') }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="w-3 h-3 rotate-45 bg-red-500 border border-red-300"></span>
-            <span>Destination (Delayed)</span>
+            <span>{{ languageService.t('control_tower.node_type.destination_delayed') }}</span>
           </div>
           <span class="text-slate-600">|</span>
-          <span class="text-slate-500">Click any node or corridor to filter shipments</span>
+          <span class="text-slate-500">{{ languageService.t('control_tower.graph.legend_hint') }}</span>
         </div>
 
         <!-- Graph Container -->
@@ -616,9 +617,9 @@ export class CrossBorderDagreLayout extends DagreLayout {
               </svg>
             </span>
             <div>
-              <h3 class="text-base font-semibold text-slate-100">Reactive Shipments Telemetry</h3>
+              <h3 class="text-base font-semibold text-slate-100">{{ languageService.t('control_tower.table.title') }}</h3>
               <p class="text-xs text-slate-400">
-                Displaying {{ filteredShipments().length }} of {{ shipments().length }} multimodal cross-border shipments
+                {{ languageService.t('control_tower.table.displaying', { filtered: filteredShipments().length, total: shipments().length }) }}
               </p>
             </div>
           </div>
@@ -628,16 +629,16 @@ export class CrossBorderDagreLayout extends DagreLayout {
             @if (selectedNode(); as node) {
               <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-300 border border-blue-500/30">
                 <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping"></span>
-                Node: {{ node.label }} ({{ node.type }})
+                {{ languageService.t('control_tower.table.node_filter', { label: node.label, type: getNodeTypeLabel(node.type) }) }}
               </span>
             } @else if (selectedLink(); as link) {
               <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
                 <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-                Corridor: {{ link.label }} ({{ link.mode }})
+                {{ languageService.t('control_tower.table.corridor_filter', { label: link.label, mode: link.mode }) }}
               </span>
             } @else {
               <span class="px-2.5 py-1 text-xs text-slate-400 rounded-md bg-slate-800/60 border border-slate-700/50">
-                All Corridors Active
+                {{ languageService.t('control_tower.table.all_corridors') }}
               </span>
             }
 
@@ -649,7 +650,7 @@ export class CrossBorderDagreLayout extends DagreLayout {
                 <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
-                Clear Filter
+                {{ languageService.t('control_tower.table.clear_filter') }}
               </button>
             }
           </div>
@@ -660,13 +661,13 @@ export class CrossBorderDagreLayout extends DagreLayout {
           <table class="w-full text-left text-sm text-slate-300">
             <thead class="text-xs uppercase bg-slate-800/60 text-slate-400 border-b border-slate-800 font-mono">
               <tr>
-                <th class="py-3 px-4">Tracking #</th>
-                <th class="py-3 px-4">Origin &rarr; Destination</th>
-                <th class="py-3 px-4">Carrier</th>
-                <th class="py-3 px-4">Current Stage</th>
-                <th class="py-3 px-4">ETA</th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4">Delay Risk</th>
+                <th class="py-3 px-4">{{ languageService.t('control_tower.table.tracking_num') }}</th>
+                <th class="py-3 px-4">{{ languageService.t('control_tower.table.origin_destination') }}</th>
+                <th class="py-3 px-4">{{ languageService.t('control_tower.table.carrier') }}</th>
+                <th class="py-3 px-4">{{ languageService.t('control_tower.table.current_stage') }}</th>
+                <th class="py-3 px-4">{{ languageService.t('control_tower.table.eta') }}</th>
+                <th class="py-3 px-4">{{ languageService.t('control_tower.table.status') }}</th>
+                <th class="py-3 px-4">{{ languageService.t('control_tower.table.delay_risk') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800 bg-slate-900/40">
@@ -703,7 +704,7 @@ export class CrossBorderDagreLayout extends DagreLayout {
                       [ngClass]="getRiskBadgeClass(shipment.delayRisk)"
                       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium">
                       <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getRiskDotClass(shipment.delayRisk)"></span>
-                      {{ shipment.delayRisk }} RISK
+                      {{ shipment.delayRisk }} {{ languageService.t('control_tower.risk') }}
                     </span>
                   </td>
                 </tr>
@@ -715,11 +716,11 @@ export class CrossBorderDagreLayout extends DagreLayout {
                         <circle cx="12" cy="12" r="9" stroke-width="2"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6"/>
                       </svg>
-                      <p class="text-sm font-medium text-slate-300">No shipments found for the active filter</p>
+                      <p class="text-sm font-medium text-slate-300">{{ languageService.t('control_tower.table.no_shipments') }}</p>
                       <button
                         (click)="clearFilter()"
                         class="text-xs text-blue-400 hover:text-blue-300 underline font-semibold mt-1">
-                        Clear filter to show all shipments
+                        {{ languageService.t('control_tower.table.clear_filter_to_show_all') }}
                       </button>
                     </div>
                   </td>
@@ -734,6 +735,7 @@ export class CrossBorderDagreLayout extends DagreLayout {
 })
 export class ControlTowerComponent implements OnInit {
   private readonly controlTowerService = inject(ControlTowerService);
+  readonly languageService = inject(LanguageService);
 
   readonly customLayout = new CrossBorderDagreLayout();
 
@@ -742,6 +744,19 @@ export class ControlTowerComponent implements OnInit {
   readonly selectedNode = signal<TopologyNode | null>(null);
   readonly selectedLink = signal<TopologyLink | null>(null);
   readonly shipments = signal<ShipmentSummary[]>([]);
+
+  getNodeTypeLabel(type: string): string {
+    switch (type) {
+      case 'ORIGIN':
+        return this.languageService.t('control_tower.node_type.origin');
+      case 'CUSTOMS_BORDER':
+        return this.languageService.t('control_tower.node_type.customs_border');
+      case 'DESTINATION':
+        return this.languageService.t('control_tower.node_type.destination_normal').replace(/ \(.+\)/, '');
+      default:
+        return type;
+    }
+  }
 
   readonly layoutSettings = {
     orientation: 'LR',
