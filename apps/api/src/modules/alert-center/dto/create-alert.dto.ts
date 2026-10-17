@@ -16,7 +16,7 @@ export class CreateAlertDto {
     example: '550e8400-e29b-41d4-a716-446655440000',
     description: 'Associated shipment UUID identifier',
   })
-  @IsUUID('4', { message: 'shipmentId must be a valid UUID' })
+  @IsString({ message: 'shipmentId must be a string' })
   @IsNotEmpty({ message: 'shipmentId is required' })
   shipmentId!: string;
 

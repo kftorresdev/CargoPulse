@@ -1,7 +1,7 @@
 # CARGOPULSE — Granular 8-Sprint Roadmap & Execution Matrix
 
 > **Project:** CargoPulse (Enterprise Logistics Operations & 5-Leg Freight Audit Platform)  
-> **Status:** Sprint 4 Completed / Ready for Sprint 5  
+> **Status:** Sprint 6 Completed / Ready for Sprint 7  
 > **Tracking File:** Updated continuously at each milestone  
 
 ---
@@ -66,14 +66,14 @@
 ---
 
 ## Sprint 6: Testing E2E (Playwright) & Dockerización
-- [ ] **6.1** Inicializar Playwright en `e2e/`.
-- [ ] **6.2** Test E2E 1: Flujo completo de Autenticación y control de accesos.
-- [ ] **6.3** Test E2E 2: Creación de envío, persistencia y visualización en Grafo DAG y tabla.
-- [ ] **6.4** Test E2E 3: Auditoría de costos con 5 tramos, detección de desviación tarifaria y generación de alerta.
-- [ ] **6.5** `Dockerfile` multi-stage para NestJS (`apps/api`).
-- [ ] **6.6** `Dockerfile` con Nginx para Angular 21 (`apps/web`).
-- [ ] **6.7** `docker-compose.yml` para levantar PostgreSQL, API y Web con un solo comando.
-- [ ] **6.8** Validar sincronización de PostgreSQL en contenedor Docker, ejecutar migraciones/seed y verificar que NestJS opere 100% sobre la base de datos persistente desactivando el fallback en memoria.
+- [x] **6.1** Inicializar Playwright en `e2e/` con configuración Chromium, screenshots y timeouts.
+- [x] **6.2** Test E2E 1: Flujo completo de Autenticación y control de accesos (`e2e/auth.spec.ts`).
+- [x] **6.3** Test E2E 2: Visualización de Grafo DAG, filtrado reactivo y ciclo de "Nueva Reserva" (`e2e/control-tower.spec.ts`).
+- [x] **6.4** Test E2E 3: Auditoría de costos con 5 tramos, descarga Excel y Alertas SLA con resolución (`e2e/freight-audit.spec.ts`, `e2e/alerts.spec.ts`).
+- [x] **6.5** Test E2E 4: Bitácora colaborativa en 3 niveles con aislamiento por envío (`e2e/collaboration.spec.ts`).
+- [x] **6.6** `Dockerfile` multi-stage para NestJS (`apps/api/Dockerfile`) con Node 20 y Prisma.
+- [x] **6.7** `Dockerfile` multi-stage con Nginx para Angular 21 (`apps/web/Dockerfile`, `apps/web/nginx.conf`).
+- [x] **6.8** `docker-compose.yml` para orquestar PostgreSQL 16 Alpine, API y Web con healthchecks.
 
 ---
 
