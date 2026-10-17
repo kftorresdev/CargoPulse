@@ -12,6 +12,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 <p align="center">
+  <a href="https://kftorresdev.github.io/CargoPulse/">
+    <img src="https://img.shields.io/badge/🚀_LIVE_DEMO-Visit_CargoPulse_on_GitHub_Pages-blueviolet?style=for-the-badge&logo=githubpages&logoColor=white" alt="Live Demo on GitHub Pages" />
+  </a>
+</p>
+
+<p align="center">
   <strong>Mission-critical multimodal supply chain telemetry, directed acyclic graph (DAG) network topology, 5-leg freight variance reconciliation, and SLA escalation control tower.</strong>
 </p>
 

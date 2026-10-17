@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { AuthResponse, LoginPayload, UserProfile } from '../models/user.model';
 
@@ -45,6 +45,26 @@ export class AuthStore {
         return authData;
       }),
       catchError((err: HttpErrorResponse | Error | any) => {
+        // Fallback for static demo hosting (e.g. GitHub Pages) when backend is unavailable
+        const isOfflineOrNotFound =
+          err?.status === 0 || err?.status === 404 || err instanceof HttpErrorResponse;
+        const demoUser = isOfflineOrNotFound
+          ? this.getDemoFallbackUser(credentials.email)
+          : null;
+
+        if (demoUser && credentials.password === 'Password123!') {
+          const fallbackData: AuthResponse = {
+            accessToken: 'demo-jwt-token-gh-pages-preview',
+            user: demoUser,
+          };
+          this.token.set(fallbackData.accessToken);
+          this.user.set(fallbackData.user);
+          this.isLoading.set(false);
+          this.error.set(null);
+          this.saveToStorage(fallbackData.accessToken, fallbackData.user);
+          return of(fallbackData);
+        }
+
         this.isLoading.set(false);
         const errorMessage =
           err?.error?.message ||
@@ -54,6 +74,44 @@ export class AuthStore {
         return throwError(() => err);
       })
     );
+  }
+
+  private getDemoFallbackUser(email?: string): UserProfile | null {
+    const normalized = (email || '').toLowerCase().trim();
+    if (normalized === 'admin@cargopulse.com') {
+      return {
+        id: '11111111-1111-1111-1111-111111111111',
+        email: 'admin@cargopulse.com',
+        firstName: 'Kevin',
+        lastName: 'Torres',
+        role: 'ADMIN',
+        isActive: true,
+        createdAt: '2026-10-16T12:00:00.000Z',
+      };
+    }
+    if (normalized === 'operator@cargopulse.com') {
+      return {
+        id: '22222222-2222-2222-2222-222222222222',
+        email: 'operator@cargopulse.com',
+        firstName: 'Carlos',
+        lastName: 'Mendoza',
+        role: 'LOGISTICS_OPERATOR',
+        isActive: true,
+        createdAt: '2026-10-16T12:00:00.000Z',
+      };
+    }
+    if (normalized === 'auditor@cargopulse.com') {
+      return {
+        id: '33333333-3333-3333-3333-333333333333',
+        email: 'auditor@cargopulse.com',
+        firstName: 'Elena',
+        lastName: 'Rivas',
+        role: 'FREIGHT_AUDITOR',
+        isActive: true,
+        createdAt: '2026-10-16T12:00:00.000Z',
+      };
+    }
+    return null;
   }
 
   logout(): void {
