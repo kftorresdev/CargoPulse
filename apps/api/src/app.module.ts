@@ -9,6 +9,7 @@ import { CollaborationModule } from './modules/collaboration/collaboration.modul
 import { FreightAuditModule } from './modules/freight-audit/freight-audit.module.js';
 import { AlertCenterModule } from './modules/alert-center/alert-center.module.js';
 import { ControlTowerModule } from './modules/control-tower/control-tower.module.js';
+import { InspectionsModule } from './modules/inspections/inspections.module.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ControlTowerModule } from './modules/control-tower/control-tower.module
     FreightAuditModule,
     AlertCenterModule,
     ControlTowerModule,
+    InspectionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

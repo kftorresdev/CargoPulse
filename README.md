@@ -12,6 +12,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 <p align="center">
+  <strong>English</strong> • <a href="README.es.md">Español</a>
+</p>
+
+<p align="center">
   <a href="https://kftorresdev.github.io/CargoPulse/">
     <img src="https://img.shields.io/badge/🚀_LIVE_DEMO-Visit_CargoPulse_on_GitHub_Pages-blueviolet?style=for-the-badge&logo=githubpages&logoColor=white" alt="Live Demo on GitHub Pages" />
   </a>
@@ -46,7 +50,7 @@ CargoPulse was architected to dismantle three acute structural bottlenecks in cr
 Traditional Transport Management Systems (TMS) present shipments in flat, disjointed tabular lists. Operators lack real-time visibility into the actual **Directed Acyclic Graph (DAG)** of the route. When a bottleneck emerges at a specific border crossing or customs terminal, dispatchers cannot instantaneously isolate which in-transit consignments are impacted or predict downstream knock-on delays to destination facilities.
 
 ### 2. Freight Cost Leakage & Tariff Variance
-Freight contracts are executed across sequential legs (*Origin Handling $\rightarrow$ International Transit 1 $\rightarrow$ Customs Clearance $\rightarrow$ International Transit 2 $\rightarrow$ Final Mile*). Trucking companies and customs brokers frequently submit post-trip invoices with undisclosed surcharges, demurrage fees, and tariff discrepancies that deviate from contracted Master Service Agreements (MSAs). Without an automated multi-stage reconciliation engine, logistics firms leak between **3% to 8% of total freight spend** annually.
+Freight contracts are executed across sequential legs (*Origin Handling → International Transit 1 → Customs Clearance → International Transit 2 → Final Mile*). Trucking companies and customs brokers frequently submit post-trip invoices with undisclosed surcharges, demurrage fees, and tariff discrepancies that deviate from contracted Master Service Agreements (MSAs). Without an automated multi-stage reconciliation engine, logistics firms leak between **3% to 8% of total freight spend** annually.
 
 ### 3. Unresolved Operational Incidents & Compounding SLA Penalties
 Border checkpoints, refrigerated cold-chain excursions, and customs holds incur time-sensitive demurrage, detention, and contractual SLA penalties. In standard ERPs, incident notes are buried in email chains or unthreaded ERP fields, leaving operations managers unable to prioritize active financial risk or enforce audit sign-offs before SLA expiration.
@@ -131,7 +135,7 @@ flowchart TD
 ├─────────────────────────┬──────────────────────────┬───────────────────────────────────┤
 │ 1. Control Tower (DAG)  │ 2. 5-Leg Freight Audit   │ 3. SLA Alert Center & Escalation  │
 │ • SVG Graph Topology    │ • Origin Handling        │ • Live DD:HH:MM Countdowns        │
-│ • Bidirectional Filters │ • Intl Transit 1         │ • Real-time Financial Impact ($)  │
+│ • Bidirectional Filters │ • Intl Transit 1         │ • Real-time Financial Impact (USD)│
 │ • 8-State Life Cycle    │ • Customs & Border       │ • Audit Resolution Modal          │
 │ • "New Booking" Modal   │ • Intl Transit 2         ├───────────────────────────────────┤
 │                         │ • Final Mile Delivery    │ 4. 3-Tier Collaborative Bitácora  │
@@ -155,20 +159,20 @@ Eliminates freight billing discrepancies by performing mathematical variance aud
 4. **Leg 4: International Transit 2** (Regional corridor transport to inland freight terminal)
 5. **Leg 5: Final Mile Delivery** (Local distribution to consignee receiving dock)
 
-$$\text{Variance (\$) } = \text{Actual Cost} - \text{Contracted Cost}$$
+$$\text{Variance (USD)} = \text{Actual Cost} - \text{Contracted Cost}$$
 
-$$\text{Variance (\%)} = \left(\frac{\text{Actual Cost} - \text{Contracted Cost}}{\text{Contracted Cost}}\right) \times 100$$
+$$\text{Variance \%} = \left(\frac{\text{Actual Cost} - \text{Contracted Cost}}{\text{Contracted Cost}}\right) \times 100$$
 
 - **Dynamic Tri-Color Thresholds:**
-  - 🟢 **Green ($\le 0\%$):** Actual cost at or under contracted budget.
-  - 🟡 **Amber ($0\% < \text{Variance} \le 5\%$):** Minor fluctuation within contractual tolerance limits.
-  - 🔴 **Red ($> 5\%$):** Contractual tariff breach requiring mandatory auditor dispute.
+  - 🟢 **Green (≤ 0%):** Actual cost at or under contracted budget.
+  - 🟡 **Amber (0% < Variance ≤ 5%):** Minor fluctuation within contractual tolerance limits.
+  - 🔴 **Red (> 5%):** Contractual tariff breach requiring mandatory auditor dispute.
 - **Server-Side Styled ExcelJS Export:** Streams binary XLSX spreadsheets formatted with corporate typography, colored status fills, number formats, and dynamic sum formulas.
 
 ### 3. Operational Incident & SLA Escalation Center (`/alerts`)
 Protects against compounding detention, demurrage, and customs penalties:
 - **Real-Time SLA Countdowns:** Live tickers calculate remaining response windows down to the second (`DD:HH:MM`) with active polling intervals.
-- **Cumulative Financial Exposure ($USD):** Dynamically sums unresolved monetary penalties across active incidents, highlighting total risk exposure.
+- **Cumulative Financial Exposure (USD):** Dynamically sums unresolved monetary penalties across active incidents, highlighting total risk exposure.
 - **Audit Resolution Flow:** Operators resolve alerts via a formal audit modal requiring documented root-cause rationale and credentialed sign-off, transitioning alerts from `ACTIVE` to `RESOLVED`.
 
 ### 4. Shipment Lifecycle & 3-Level Collaborative Bitácora (`/shipments`)
@@ -370,7 +374,7 @@ CargoPulse/
 - 🌐 **GitHub:** [@kftorresdev](https://github.com/kftorresdev)
 - 📍 **Location:** Tegucigalpa, Honduras (UTC-6 / US Central Time Zone)
 - 💼 **Timezone Overlap:** Full business day overlap with US East/Central/West; strong async overlap with European tech hubs.
-- 🎯 **Target Roles:** Mid / Semi-Senior Frontend & Full-Stack Engineer ($USD Remote).
+- 🎯 **Target Roles:** Mid / Semi-Senior Frontend & Full-Stack Engineer (USD Remote).
 
 ---
 
